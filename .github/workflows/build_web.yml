@@ -29,8 +29,13 @@ jobs:
 
       - name: Compiler le projet avec Ren'Py (Docker)
         run: |
-          docker run --rm -v "$PWD":/project renpy/renpy:8.2.3 \
-            /renpy/renpy.sh /renpy/launcher distribute /project --destination /project/web_build --package web
+          docker run --rm -v "$PWD":/project ghcr.io/renpy/renpy:latest \
+            renpy.sh /project distribute --destination /project/web_build --package web
+
+      - name: Vérifier le contenu du build
+        run: |
+          echo "=== Contenu de web_build ==="
+          ls -la ./web_build || echo "Dossier web_build introuvable !"
 
       - name: Uploader l'artefact pour GitHub Pages
         uses: actions/upload-pages-artifact@v4
