@@ -27,10 +27,13 @@ jobs:
       - name: Configurer GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Compiler le projet avec Ren'Py (Docker)
-        run: |
-          docker run --rm -v "$PWD":/project ghcr.io/renpy/renpy:latest \
-            renpy.sh /project distribute --destination /project/web_build --package web
+      - name: Installer Ren'Py avec le support Web
+        uses: remarkablegames/setup-renpy@v1
+        with:
+          web: true
+
+      - name: Compiler le projet pour le Web
+        run: renpy-launcher web_build . --destination ./web_build
 
       - name: Vérifier le contenu du build
         run: |
