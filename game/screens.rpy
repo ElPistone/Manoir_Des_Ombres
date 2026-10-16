@@ -59,24 +59,31 @@ screen say(who, what):
         xalign 0.5
         yalign 1.0
         xsize 1400
-        ysize 230
+        ysize 400
         yoffset -30
         padding (3, 3)
-        background Solid(gm_gold)
+        # Cadre en 9-slice : les marges (gauche, haut, droite, bas) protègent
+        # les ornements dorés des coins pour qu'ils ne s'étirent pas. RÈGLE
+        # IMPORTANTE : (haut + bas) doit rester nettement inférieur à ysize
+        # ci-dessus, sinon le cadre s'écrase sur lui-même et devient invisible
+        # (c'était le bug précédent : 170+170=340 > 260). Même logique pour
+        # (gauche + droite) par rapport à xsize. Ajuste ces 4 valeurs si un
+        # coin ou le cachet de cire est encore rogné/déformé chez toi.
+        background Frame("images/ui/frame_dialogue.png", 220, 140, 220, 160)
 
         frame:
             xfill True
             yfill True
-            background Solid(gm_night)
-            padding (35, 22)
+            background None
+            padding (60, 70)
 
             vbox:
                 spacing 10
 
                 if who is not None:
-                    text who id "who" color gm_gold size 24 bold True
+                    text who id "who" color gm_bordeaux size 24 bold True
 
-                text what id "what" color gm_parchemin size 30 line_spacing 8 outlines [(1, "#000000aa", 0, 0)]
+                text what id "what" color "#2b1d0e" size 28 line_spacing 8
 
 
 ## ------------------------------------------------------------

@@ -1,0 +1,48 @@
+name: Build Ren'Py Web
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout du dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Installer Ren'Py
+        uses: PaxlavaGames/renpy-install@v0.2.0
+        with:
+          version: "8.5.3"
+          download_web: "yes"
+
+      - name: Compiler le projet pour le Web
+        uses: PaxlavaGames/renpy-web-build@v0.1.0
+        with:
+          path: "."
+
+      - name: Uploader l'artefact pour GitHub Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: "./web"
+
+      - name: Déployer sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
