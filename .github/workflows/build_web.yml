@@ -27,11 +27,16 @@ jobs:
       - name: Configurer GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Compiler le projet pour le Web avec Ren'Py
-        uses: ProjectAlice/renpy-action@v1
+      - name: Installer Ren'Py
+        uses: PaxlavaGames/renpy-install@v0.2.0
         with:
-          renpy-version: "8.5.3"
-          build-web: true
+          version: "8.5.3"
+          download_web: "yes"
+
+      - name: Compiler le projet pour le Web
+        uses: PaxlavaGames/renpy-web-build@v0.1.0
+        with:
+          path: "."
 
       - name: Uploader l'artefact pour GitHub Pages
         uses: actions/upload-pages-artifact@v4
