@@ -1,5 +1,7 @@
 # Le Manoir des Ombres
 
+[![Build Ren'Py Web](https://github.com/ElPistone/Manoir_Des_Ombres/actions/workflows/build_web.yml/badge.svg)](https://github.com/ElPistone/Manoir_Des_Ombres/actions/workflows/build_web.yml)
+
 Jeu narratif développé avec **Ren'Py**, mêlant exploration, énigmes et un système de pari sur un inventaire de fragments de carte. Perdu de nuit, le joueur trouve refuge dans un manoir qui se révèle être un labyrinthe : pour en sortir, il doit reconstituer une carte complète en traversant une série de portes, chacune gardée par une énigme.
 
 > Projet en développement actif (Master PSM).

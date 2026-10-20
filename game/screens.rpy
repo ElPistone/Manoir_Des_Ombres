@@ -62,14 +62,15 @@ screen say(who, what):
         ysize 400
         yoffset -30
         padding (3, 3)
-        # Cadre en 9-slice : les marges (gauche, haut, droite, bas) protègent
-        # les ornements dorés des coins pour qu'ils ne s'étirent pas. RÈGLE
-        # IMPORTANTE : (haut + bas) doit rester nettement inférieur à ysize
-        # ci-dessus, sinon le cadre s'écrase sur lui-même et devient invisible
-        # (c'était le bug précédent : 170+170=340 > 260). Même logique pour
-        # (gauche + droite) par rapport à xsize. Ajuste ces 4 valeurs si un
-        # coin ou le cachet de cire est encore rogné/déformé chez toi.
-        background Frame("images/ui/frame_dialogue.png", 220, 140, 220, 160)
+        # Cadre en 9-slice, forcé à occuper EXACTEMENT xsize x ysize via
+        # Transform (xysize) : certains conteneurs Ren'Py ne redimensionnent
+        # pas un "background" à la taille réelle du bloc dans tous les cas,
+        # ce qui laissait un espace vide au-dessus du parchemin où le texte
+        # flottait. Ce wrapper élimine toute ambiguïté.
+        background Transform(
+            Frame("images/ui/frame_dialogue.png", 220, 140, 220, 160),
+            xysize=(1400, 400)
+        )
 
         frame:
             xfill True
@@ -78,6 +79,7 @@ screen say(who, what):
             padding (60, 70)
 
             vbox:
+                yalign 0.5
                 spacing 10
 
                 if who is not None:
