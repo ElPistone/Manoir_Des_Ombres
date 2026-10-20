@@ -2,8 +2,9 @@
 
 [![Build Ren'Py Web](https://github.com/ElPistone/Manoir_Des_Ombres/actions/workflows/build_web.yml/badge.svg)](https://github.com/ElPistone/Manoir_Des_Ombres/actions/workflows/build_web.yml)
 
-Jeu narratif développé avec **Ren'Py**, mêlant exploration, énigmes et un système de pari sur un inventaire de fragments de carte. Perdu de nuit, le joueur trouve refuge dans un manoir qui se révèle être un labyrinthe : pour en sortir, il doit reconstituer une carte complète en traversant une série de portes, chacune gardée par une énigme.
+[Lien vers la démo](https://elpistone.github.io/Manoir_Des_Ombres/)
 
+Jeu narratif développé avec **Ren'Py**, mêlant exploration, énigmes et un système de pari sur un inventaire de fragments de carte. Perdu de nuit, le joueur trouve refuge dans un manoir qui se révèle être un labyrinthe : pour en sortir, il doit reconstituer une carte complète en traversant une série de portes, chacune gardée par une énigme.
 > Projet en développement actif (Master PSM).
 
 ---
@@ -109,8 +110,4 @@ python nettoyer_assets.py game/images/ui
 - Moteur de jeu : [Ren'Py](https://www.renpy.org/) (Python)
 - Traitement d'images : [Pillow](https://python-pillow.org/)
 - Direction artistique : génération d'images IA (prompts sur mesure, cf. documentation de production), retravaillées via scripts maison
-- Développement : [À compléter avec ton nom / celui de l'équipe]
-
-## Licence
-
-[À compléter — ex. tous droits réservés dans le cadre du Master PSM, ou licence libre si le projet est destiné à être partagé publiquement]
+- Développement : Diaby Mamadou Dian
