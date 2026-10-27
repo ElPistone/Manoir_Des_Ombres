@@ -12,9 +12,8 @@ define build.name = "LeManoirLabyrinthe"
 # Titre de la fenêtre (identique au nom du jeu)
 define config.window_title = config.name
 
-# Icône de la fenêtre : prévoir un fichier dédié 256x256 (window_icon.png)
-# recommandé plutôt que de réutiliser icon_score.png en production.
-define config.window_icon = "images/ui/icon_score.png"
+# Icône de la fenêtre (256x256, tirée de icon_score.png)
+define config.window_icon = "images/ui/icon_window.png"
 
 
 ## Résolution & affichage -------------------------------------
@@ -65,7 +64,18 @@ define config.hard_rollback_limit = 0
 
 ## Musique / son ------------------------------------------------
 
-# define config.main_menu_music = "audio/music/ambiance.ogg"
+# Tous les sons sont fabriqués par synthese_sons.py (aucun droit d'auteur)
+define config.main_menu_music = "audio/ambiance_manoir.ogg"
+define config.fadeout_audio = 1.5
+
+
+## Build ------------------------------------------------------
+
+# Les originaux lourds (PNG non compressés) ne sont jamais livrés avec le jeu.
+init python:
+    build.classify("assets_sources/**", None)
+    build.classify("**.bat", None)
+    build.classify("**.py", None)
 
 
 ## Divers ------------------------------------------------------

@@ -11,12 +11,14 @@
 screen gm_panel(pad=40, xa=0.5, ya=0.5):
     if gm_art_ui:
         frame:
+            at panneau_apparait
             align (xa, ya)
             background Frame("images/ui/frame_ui_generic.png", 80, 80)
             padding (pad, pad)
             transclude
     else:
         frame:
+            at panneau_apparait
             align (xa, ya)
             background Solid(gm_gold)
             padding (3, 3)
@@ -26,24 +28,31 @@ screen gm_panel(pad=40, xa=0.5, ya=0.5):
                 transclude
 
 
-# Bouton : label, action, largeur, hauteur, taille du texte, image (mode PNG)
-screen gm_bouton(label, act, w=420, h=80, fs=28, img="btn_start"):
-    button:
-        xsize w
-        ysize h
-        action act
-        padding (3, 3)
-        background (Frame("images/ui/" + img + ".png", 40, 40) if gm_art_ui else Solid(gm_gold))
-        hover_background (Frame("images/ui/" + img + "_hover.png", 40, 40) if gm_art_ui else Solid(gm_gold_light))
-        if gm_art_ui:
-            text label size fs color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5
-        else:
-            frame:
-                background Solid(gm_bordeaux)
-                xfill True
-                yfill True
-                padding (0, 0)
-                text label size fs color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5 text_align 0.5
+# Bouton : label, action, largeur, hauteur, taille du texte, image (mode PNG),
+# délai d'apparition (pour faire entrer les boutons l'un après l'autre)
+screen gm_bouton(label, act, w=420, h=80, fs=28, img="btn_start", d=0.0):
+    frame:
+        at bouton_apparait(d)
+        background None
+        padding (0, 0)
+        button:
+            at bouton_survol
+            xsize w
+            ysize h
+            action act
+            activate_sound "audio/clic.ogg"
+            padding (3, 3)
+            background (Frame("images/ui/" + img + ".png", 40, 40) if gm_art_ui else Solid(gm_gold))
+            hover_background (Frame("images/ui/" + img + "_hover.png", 40, 40) if gm_art_ui else Solid(gm_gold_light))
+            if gm_art_ui:
+                text label size fs color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5
+            else:
+                frame:
+                    background Solid(gm_bordeaux)
+                    xfill True
+                    yfill True
+                    padding (0, 0)
+                    text label size fs color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5 text_align 0.5
 
 
 ## ------------------------------------------------------------
@@ -56,26 +65,26 @@ screen say(who, what):
 
     window:
         id "window"
+        at parchemin_deroule
         xalign 0.5
         yalign 1.0
-        xsize 1400
-        ysize 400
-        yoffset -30
-        padding (63, 73)
-        background Transform(
-            Frame("images/ui/frame_dialogue.jpg", 220, 140, 220, 160),
-            xysize=(1400, 400)
-        )
+        # Cadre taillé sur mesure (fabriquer_cadre_dialogue.py) : 3 lignes
+        # de texte au maximum, ornements jamais déformés.
+        xsize 1240
+        ysize 230
+        yoffset -24
+        padding (100, 38, 100, 38)
+        background "images/ui/frame_dialogue_bas.jpg"
 
         vbox:
             xfill True
             yalign 0.5
-            spacing 10
+            spacing 6
 
             if who is not None:
                 text who id "who" color gm_bordeaux size 24 bold True
 
-            text what id "what" color "#2b1d0e" size 28 line_spacing 8 xfill True
+            text what id "what" color "#2b1d0e" size 27 line_spacing 6 xfill True
 
 
 ## ------------------------------------------------------------
@@ -87,7 +96,7 @@ screen choix_piece(pieces):
     modal True
     zorder 200
 
-    add Solid("#000000aa")
+    add Solid("#000000aa") at voile_apparait
 
     use gm_panel(pad=50):
         vbox:
@@ -102,19 +111,24 @@ screen choix_piece(pieces):
                 box_wrap True
                 box_wrap_spacing 15
 
-                for piece in pieces:
-                    button:
-                        xysize (120, 120)
-                        action Return(piece)
-                        padding (3, 3)
-                        background Solid(gm_gold)
-                        hover_background Solid(gm_gold_light)
-                        frame:
-                            background Solid(gm_bordeaux)
-                            xfill True
-                            yfill True
-                            padding (0, 0)
-                            text piece.replace("piece_", "N° ") size 26 color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5
+                for i, piece in enumerate(pieces):
+                    frame:
+                        at bouton_apparait(0.1 + i * 0.08)
+                        background None
+                        padding (0, 0)
+                        button:
+                            at bouton_survol
+                            xysize (150, 150)
+                            action Return(piece)
+                            activate_sound "audio/clic.ogg"
+                            padding (3, 3)
+                            background Solid(gm_gold)
+                            hover_background Solid(gm_gold_light)
+                            # Vignette du vrai morceau de carte, numéro en surimpression
+                            fixed:
+                                add Transform("images/map/" + piece + ".jpg", xysize=(144, 144), fit="cover")
+                                add Solid("#0d152466")
+                                text piece.replace("piece_", "N° ") size 26 color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5 outlines [(2, "#0d1524", 0, 0)]
 
 
 # --- Énigme à choix multiples : 2 réponses par ligne, sur 2 lignes ---
@@ -123,7 +137,7 @@ screen menu_enigme(riddle_text, choices):
     modal True
     zorder 200
 
-    add Solid("#000000aa")
+    add Solid("#000000aa") at voile_apparait
 
     use gm_panel(pad=50):
         vbox:
@@ -138,8 +152,8 @@ screen menu_enigme(riddle_text, choices):
                 box_wrap True
                 box_wrap_spacing 30
 
-                for option in choices:
-                    use gm_bouton(option, Return(option), 490, 90, 26, "frame_dialogue")
+                for i, option in enumerate(choices):
+                    use gm_bouton(option, Return(option), 490, 90, 26, "frame_dialogue", d=0.25 + i * 0.1)
 
 
 # --- HUD (haut droite) : porte en cours, score + accès à la carte ---
@@ -147,6 +161,7 @@ screen hud_jeu():
     zorder 100
 
     hbox:
+        at voile_apparait
         xalign 0.98
         yalign 0.03
         spacing 15
@@ -174,7 +189,7 @@ screen carte_puzzle():
     modal True
     zorder 250
 
-    add Solid("#000000bb")
+    add Solid("#000000bb") at voile_apparait
 
     use gm_panel(pad=40):
         vbox:
@@ -183,16 +198,16 @@ screen carte_puzzle():
             text "Votre carte" size 34 color gm_parchemin xalign 0.5
 
             if map_pieces_positions:
-                # Vraie carte (nécessite positions_carte.rpy et images/map/piece_XX.png)
+                # Vraie carte (nécessite positions_carte.rpy et images/map/piece_XX.jpg)
                 $ echelle = min(900.0 / map_full_width, 640.0 / map_full_height)
                 fixed:
                     xalign 0.5
                     xysize (int(map_full_width * echelle), int(map_full_height * echelle))
                     add Solid("#1a2236")
                     for pid in pieces_owned:
-                        if pid in map_pieces_positions and renpy.loadable("images/map/" + pid + ".png"):
+                        if pid in map_pieces_positions and renpy.loadable("images/map/" + pid + ".jpg"):
                             $ pp = map_pieces_positions[pid]
-                            add Transform("images/map/" + pid + ".png", xysize=(int(pp["width"] * echelle), int(pp["height"] * echelle))) xpos int(pp["x"] * echelle) ypos int(pp["y"] * echelle)
+                            add Transform("images/map/" + pid + ".jpg", xysize=(int(pp["width"] * echelle), int(pp["height"] * echelle))) xpos int(pp["x"] * echelle) ypos int(pp["y"] * echelle)
             else:
                 # Version simplifiée : une tuile par morceau
                 hbox:
@@ -221,16 +236,17 @@ screen main_menu():
 
     add "bg_title"
 
-    add Transform("images/ui/logo_title.png", xysize=(760, 520), fit="contain") xalign 0.5 ypos 30
+    add Transform("images/ui/logo_title.jpg", xysize=(760, 520), fit="contain") at voile_apparait xalign 0.5 ypos 30
 
     vbox:
         xalign 0.5
-        ypos 640
-        spacing 20
+        ypos 600
+        spacing 18
 
-        use gm_bouton("Commencer", Start(), 420, 80, 30, "btn_start")
-        use gm_bouton("Charger", ShowMenu("load"), 420, 80, 30, "btn_load")
-        use gm_bouton("Quitter", Quit(confirm=True), 420, 80, 30, "btn_quit")
+        use gm_bouton("Commencer", Start(), 420, 80, 30, "btn_start", d=0.4)
+        use gm_bouton("Charger", ShowMenu("load"), 420, 80, 30, "btn_load", d=0.55)
+        use gm_bouton("Son", ShowMenu("preferences"), 420, 80, 30, "btn_load", d=0.7)
+        use gm_bouton("Quitter", Quit(confirm=True), 420, 80, 30, "btn_quit", d=0.85)
 
 
 ## ------------------------------------------------------------
@@ -269,6 +285,7 @@ screen navigation():
         textbutton "Retour" action Return() text_color gm_gold text_hover_color gm_gold_light text_size 26
         textbutton "Sauvegarder" action ShowMenu("save") text_color gm_gold text_hover_color gm_gold_light text_size 26
         textbutton "Charger" action ShowMenu("load") text_color gm_gold text_hover_color gm_gold_light text_size 26
+        textbutton "Son" action ShowMenu("preferences") text_color gm_gold text_hover_color gm_gold_light text_size 26
         textbutton "Menu principal" action MainMenu(confirm=True) text_color gm_gold text_hover_color gm_gold_light text_size 26
 
 
@@ -318,6 +335,25 @@ screen file_slots():
 
 
 ## ------------------------------------------------------------
+## RÉGLAGES DU SON
+## ------------------------------------------------------------
+
+screen preferences():
+    use game_menu(_("Réglages du son")):
+        vbox:
+            spacing 25
+            xsize 700
+
+            for titre, reglage in [("Ambiance", "music volume"), ("Effets sonores", "sound volume")]:
+                vbox:
+                    spacing 8
+                    text titre color gm_gold size 26
+                    bar value Preference(reglage) xsize 700 ysize 30 left_bar Solid(gm_gold) right_bar Solid("#1a2236") thumb None
+
+            textbutton "Couper tous les sons" action Preference("all mute", "toggle") text_color gm_gold text_hover_color gm_gold_light text_selected_color gm_gold_light text_size 24
+
+
+## ------------------------------------------------------------
 ## CONFIRMATION (Quitter, Menu principal...)
 ## ------------------------------------------------------------
 
@@ -325,7 +361,7 @@ screen confirm(message, yes_action, no_action):
     modal True
     zorder 300
 
-    add Solid("#000000cc")
+    add Solid("#000000cc") at voile_apparait
 
     use gm_panel(pad=40):
         vbox:
@@ -338,3 +374,24 @@ screen confirm(message, yes_action, no_action):
                 spacing 30
                 use gm_bouton("Oui", yes_action, 200, 70, 26, "btn_start")
                 use gm_bouton("Non", no_action, 200, 70, 26, "btn_quit")
+
+
+## ------------------------------------------------------------
+## NOTIFICATION (renpy.notify : fragment gagné...)
+## ------------------------------------------------------------
+
+screen notify(message):
+    zorder 400
+
+    frame:
+        at notif_apparait
+        xalign 0.5
+        ypos 40
+        background Solid(gm_gold)
+        padding (3, 3)
+        frame:
+            background Solid(gm_night)
+            padding (36, 14)
+            text message size 28 color gm_gold_light
+
+    timer 2.8 action Hide("notify")

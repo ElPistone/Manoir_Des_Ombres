@@ -27,3 +27,5 @@
 /strings.json
 
 .vscode/
+# Originaux lourds des images (gardés en local, non livrés)
+/assets_sources/

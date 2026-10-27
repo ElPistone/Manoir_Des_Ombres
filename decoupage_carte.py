@@ -9,7 +9,8 @@ import sys
 from PIL import Image
 
 RACINE = os.path.dirname(os.path.abspath(__file__))
-CARTE = os.path.join(RACINE, "game", "images", "map", "map_full.png")
+# La carte complète n'est pas livrée avec le jeu : elle reste dans assets_sources/.
+CARTE = os.path.join(RACINE, "assets_sources", "map", "map_full.png")
 DOSSIER_SORTIE = os.path.join(RACINE, "game", "images", "map")
 FICHIER_POSITIONS = os.path.join(RACINE, "game", "positions_carte.rpy")
 
@@ -18,7 +19,7 @@ def main():
     colonnes = int(sys.argv[1]) if len(sys.argv) > 1 else 2
     lignes = int(sys.argv[2]) if len(sys.argv) > 2 else 2
 
-    carte = Image.open(CARTE)
+    carte = Image.open(CARTE).convert("RGB")
     largeur, hauteur = carte.size
     positions = {}
 
@@ -27,7 +28,7 @@ def main():
         x0, y0 = col * largeur // colonnes, lig * hauteur // lignes
         x1, y1 = (col + 1) * largeur // colonnes, (lig + 1) * hauteur // lignes
         pid = "piece_%02d" % (n + 1)
-        carte.crop((x0, y0, x1, y1)).save(os.path.join(DOSSIER_SORTIE, pid + ".png"), optimize=True)
+        carte.crop((x0, y0, x1, y1)).save(os.path.join(DOSSIER_SORTIE, pid + ".jpg"), quality=90, optimize=True)
         positions[pid] = {"x": x0, "y": y0, "width": x1 - x0, "height": y1 - y0}
 
     with open(FICHIER_POSITIONS, "w", encoding="utf-8") as f:

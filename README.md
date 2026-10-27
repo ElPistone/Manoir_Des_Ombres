@@ -84,6 +84,8 @@ La direction artistique est produite par génération d'images IA, puis retravai
 1. **`decoupage_carte.py`** — découpe `map_full.png` en 4 fragments (`piece_01.png` à `piece_04.png`) et génère `positions_carte.rpy`, utilisé par l'écran de reconstitution de la carte.
 2. **`nettoyer_assets.py`** — les générateurs d'images IA simulent souvent la transparence par un damier gris/blanc au lieu d'un vrai canal alpha, et regroupent parfois plusieurs états d'un bouton (normal/survolé) sur une seule image. Ce script détecte et retire le damier, recadre l'élément utile, et sépare les visuels assemblés. Les originaux sont sauvegardés avant modification.
 
+Les images livrées avec le jeu sont en JPEG compressé (environ 5 Mo au total). Les PNG originaux, beaucoup plus lourds, sont rangés dans `assets_sources/` (non versionné, jamais livré avec le jeu) ; `ranger_images.bat` les y déplace.
+
 ```bash
 pip install pillow
 python decoupage_carte.py
@@ -95,14 +97,14 @@ python nettoyer_assets.py game/images/ui
 - **Interface dessinée par défaut** : `ui_style.rpy` a `gm_art_ui = False`, donc le jeu utilise des boutons et cadres unis générés par Ren'Py plutôt que les PNG de `images/ui/`. Passer cette variable à `True` une fois les images nettoyées via `nettoyer_assets.py`.
 - **Icônes non câblées** : `icon_map_piece.png` et `icon_score.png` ne sont pour l'instant pas utilisées dans le HUD ni les écrans de jeu (remplacées par des couleurs unies). `cursor.png` n'est pas encore défini comme curseur personnalisé dans `options.rpy`.
 - **Nom du jeu** : `config.name` dans `options.rpy` affiche encore « Le Manoir-Labyrinthe » et doit être mis à jour en « Le Manoir des Ombres » pour correspondre au titre actuel.
-- **Audio** : aucune musique ni bruitage intégré pour l'instant (`config.main_menu_music` est commenté dans `options.rpy` en attendant les fichiers).
+- **Audio** : ambiances et bruitages sont fabriqués par synthèse (`python synthese_sons.py`, nécessite numpy et ffmpeg), donc libres de droits. Ils peuvent être remplacés par des enregistrements en gardant les mêmes noms de fichiers dans `game/audio/`.
 
 ## Roadmap
 
 - [ ] Câbler `icon_map_piece.png`, `icon_score.png` et `cursor.png`
 - [ ] Basculer `gm_art_ui` sur `True` une fois les assets nettoyés
 - [ ] Mettre à jour `config.name` dans `options.rpy`
-- [ ] Intégrer musique d'ambiance et bruitages (portes, bonne/mauvaise réponse)
+- [x] Intégrer musique d'ambiance et bruitages (portes, bonne/mauvaise réponse)
 - [ ] Finaliser l'ensemble des illustrations (fonds, icônes d'énigmes)
 
 ## Outils et crédits
