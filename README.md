@@ -33,11 +33,12 @@ Direction artistique : nuit mystérieuse, manoir gothique, parchemin et encre do
 ## Mécanique de jeu
 
 - Le joueur commence avec **1 fragment de carte**, ramassé sous le tapis du hall d'entrée.
-- Trois portes le séparent de la sortie, de difficulté croissante : **niveau 0** (très simple), **niveau 1** (il faut réfléchir), **niveau 2** (vraiment difficile, souvent un piège).
-- Avant chaque porte, il **mise un des fragments** qu'il possède, puis répond à une énigme à choix multiples tirée au hasard dans le pool du niveau (les réponses sont mélangées).
-  - **Bonne réponse** → il récupère son fragment **et** en gagne un nouveau, puis passe au niveau suivant.
-  - **Mauvaise réponse** → le fragment misé est englouti et la partie est **perdue** : il faut réussir les 3 énigmes d'affilée.
-- **Victoire** : les 3 portes franchies, soit 4 fragments réunis.
+- À chaque porte, il **mise un des fragments** qu'il possède, puis répond à une énigme à choix multiples (tirée au hasard, réponses mélangées, sans répétition tant que possible).
+  - **Bonne réponse** → il récupère son fragment **et** en gagne un nouveau.
+  - **Mauvaise réponse** → le fragment misé est englouti, mais la partie continue tant qu'il lui en reste.
+- **La difficulté suit le nombre de fragments** : avec 1 fragment, énigme de niveau 0 (très simple, car une erreur à ce moment fait perdre) ; avec 2, niveau 1 ; avec 3, niveau 2, la porte qui ferait gagner est la plus dure.
+- **Victoire** : réunir **4 fragments**.
+- **Défaite** : plus aucun fragment à miser, ou **10 portes** passées sans avoir complété la carte.
 - Pas de retour en arrière : une réponse donnée est définitive.
 - Un écran dédié (« la carte ») montre la carte se reconstituer au fil de la partie.
 

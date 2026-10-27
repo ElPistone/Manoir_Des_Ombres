@@ -156,7 +156,7 @@ screen menu_enigme(riddle_text, choices):
                     use gm_bouton(option, Return(option), 490, 90, 26, "frame_dialogue", d=0.25 + i * 0.1)
 
 
-# --- HUD (haut droite) : porte en cours, score + accès à la carte ---
+# --- HUD (haut droite) : manche en cours + accès à la carte ---
 screen hud_jeu():
     zorder 100
 
@@ -169,12 +169,7 @@ screen hud_jeu():
         frame:
             background Solid("#0d1524cc")
             padding (18, 8)
-            text ("Porte : %d/%d" % (min(niveau + 1, serie_requise), serie_requise)) size 26 color gm_gold
-
-        frame:
-            background Solid("#0d1524cc")
-            padding (18, 8)
-            text ("Score : %d" % score) size 26 color gm_gold
+            text ("Porte : %d/%d" % (max(manche, 1), max_manches)) size 26 color gm_gold
 
         button:
             background Solid("#0d1524cc")
