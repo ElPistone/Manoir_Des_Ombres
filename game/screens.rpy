@@ -61,31 +61,21 @@ screen say(who, what):
         xsize 1400
         ysize 400
         yoffset -30
-        padding (3, 3)
-        # Cadre en 9-slice, forcé à occuper EXACTEMENT xsize x ysize via
-        # Transform (xysize) : certains conteneurs Ren'Py ne redimensionnent
-        # pas un "background" à la taille réelle du bloc dans tous les cas,
-        # ce qui laissait un espace vide au-dessus du parchemin où le texte
-        # flottait. Ce wrapper élimine toute ambiguïté.
+        padding (63, 73)
         background Transform(
-            Frame("images/ui/frame_dialogue.png", 220, 140, 220, 160),
+            Frame("images/ui/frame_dialogue.jpg", 220, 140, 220, 160),
             xysize=(1400, 400)
         )
 
-        frame:
+        vbox:
             xfill True
-            yfill True
-            background None
-            padding (60, 70)
+            yalign 0.5
+            spacing 10
 
-            vbox:
-                yalign 0.5
-                spacing 10
+            if who is not None:
+                text who id "who" color gm_bordeaux size 24 bold True
 
-                if who is not None:
-                    text who id "who" color gm_bordeaux size 24 bold True
-
-                text what id "what" color "#2b1d0e" size 28 line_spacing 8
+            text what id "what" color "#2b1d0e" size 28 line_spacing 8 xfill True
 
 
 ## ------------------------------------------------------------
@@ -128,6 +118,7 @@ screen choix_piece(pieces):
 
 
 # --- Énigme à choix multiples : 2 réponses par ligne, sur 2 lignes ---
+# Renvoie le texte de la réponse choisie (les réponses sont mélangées).
 screen menu_enigme(riddle_text, choices):
     modal True
     zorder 200
@@ -147,11 +138,11 @@ screen menu_enigme(riddle_text, choices):
                 box_wrap True
                 box_wrap_spacing 30
 
-                for i, option in enumerate(choices):
-                    use gm_bouton(option, Return(i), 490, 90, 26, "frame_dialogue")
+                for option in choices:
+                    use gm_bouton(option, Return(option), 490, 90, 26, "frame_dialogue")
 
 
-# --- HUD (haut droite) : score + accès à la carte ---
+# --- HUD (haut droite) : porte en cours, score + accès à la carte ---
 screen hud_jeu():
     zorder 100
 
@@ -159,6 +150,11 @@ screen hud_jeu():
         xalign 0.98
         yalign 0.03
         spacing 15
+
+        frame:
+            background Solid("#0d1524cc")
+            padding (18, 8)
+            text ("Porte : %d/%d" % (min(niveau + 1, serie_requise), serie_requise)) size 26 color gm_gold
 
         frame:
             background Solid("#0d1524cc")
@@ -188,9 +184,10 @@ screen carte_puzzle():
 
             if map_pieces_positions:
                 # Vraie carte (nécessite positions_carte.rpy et images/map/piece_XX.png)
-                $ echelle = 900.0 / map_full_width
+                $ echelle = min(900.0 / map_full_width, 640.0 / map_full_height)
                 fixed:
-                    xysize (900, int(map_full_height * echelle))
+                    xalign 0.5
+                    xysize (int(map_full_width * echelle), int(map_full_height * echelle))
                     add Solid("#1a2236")
                     for pid in pieces_owned:
                         if pid in map_pieces_positions and renpy.loadable("images/map/" + pid + ".png"):

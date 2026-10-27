@@ -1,6 +1,6 @@
 ########################################
 # LE MANOIR-LABYRINTHE — textes.rpy
-# Pools de dialogues/ambiance pour éviter la répétition sur 9 portes
+# Pools de dialogues/ambiance pour varier les textes d'une partie à l'autre
 ########################################
 
 init python:

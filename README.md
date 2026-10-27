@@ -32,14 +32,14 @@ Direction artistique : nuit mystérieuse, manoir gothique, parchemin et encre do
 
 ## Mécanique de jeu
 
-- Le joueur commence avec **1 fragment de carte** (trouvé dans le hall d'entrée).
-- Le manoir compte **9 portes**, chacune gardée par une énigme à choix multiples.
-- Avant chaque porte, le joueur **mise un fragment de carte** qu'il possède.
-  - **Bonne réponse** → il récupère son fragment **et** en gagne un nouveau.
-  - **Mauvaise réponse** → le fragment misé est perdu définitivement, mais la partie continue.
-- **Victoire** : les 10 fragments sont réunis (le fragment de départ + les 9 obtenus aux portes).
-- **Défaite** : le joueur n'a plus aucun fragment à miser.
-- Un écran dédié (« la carte ») permet de visualiser la reconstitution de la carte au fil de la partie.
+- Le joueur commence avec **1 fragment de carte**, ramassé sous le tapis du hall d'entrée.
+- Trois portes le séparent de la sortie, de difficulté croissante : **niveau 0** (très simple), **niveau 1** (il faut réfléchir), **niveau 2** (vraiment difficile, souvent un piège).
+- Avant chaque porte, il **mise un des fragments** qu'il possède, puis répond à une énigme à choix multiples tirée au hasard dans le pool du niveau (les réponses sont mélangées).
+  - **Bonne réponse** → il récupère son fragment **et** en gagne un nouveau, puis passe au niveau suivant.
+  - **Mauvaise réponse** → le fragment misé est englouti et la partie est **perdue** : il faut réussir les 3 énigmes d'affilée.
+- **Victoire** : les 3 portes franchies, soit 4 fragments réunis.
+- Pas de retour en arrière : une réponse donnée est définitive.
+- Un écran dédié (« la carte ») montre la carte se reconstituer au fil de la partie.
 
 ## Prérequis
 
@@ -65,7 +65,8 @@ le-manoir-des-ombres/
 │   │   ├── riddles/        # illustrations d'énigmes
 │   │   └── map/            # carte complète + fragments découpés
 │   ├── audio/               # musiques et bruitages (à venir)
-│   ├── variables.rpy        # état global, données des 9 énigmes
+│   ├── variables.rpy        # état global, portes et énigmes par niveau
+│   ├── positions_carte.rpy  # généré par decoupage_carte.py
 │   ├── script.rpy           # boucle de jeu, intro, fins
 │   ├── screens.rpy          # écrans : titre, dialogue, énigme, HUD, sauvegarde
 │   ├── ui_style.rpy         # palette, bascule interface dessinée/PNG, mise à l'échelle des fonds
@@ -80,7 +81,7 @@ le-manoir-des-ombres/
 
 La direction artistique est produite par génération d'images IA, puis retravaillée par deux scripts Python :
 
-1. **`decoupage_carte.py`** — découpe `map_full.png` en fragments (`piece_01.png` à `piece_10.png`) et génère `positions_carte.rpy`, utilisé par l'écran de reconstitution de la carte.
+1. **`decoupage_carte.py`** — découpe `map_full.png` en 4 fragments (`piece_01.png` à `piece_04.png`) et génère `positions_carte.rpy`, utilisé par l'écran de reconstitution de la carte.
 2. **`nettoyer_assets.py`** — les générateurs d'images IA simulent souvent la transparence par un damier gris/blanc au lieu d'un vrai canal alpha, et regroupent parfois plusieurs états d'un bouton (normal/survolé) sur une seule image. Ce script détecte et retire le damier, recadre l'élément utile, et sépare les visuels assemblés. Les originaux sont sauvegardés avant modification.
 
 ```bash
@@ -95,7 +96,6 @@ python nettoyer_assets.py game/images/ui
 - **Icônes non câblées** : `icon_map_piece.png` et `icon_score.png` ne sont pour l'instant pas utilisées dans le HUD ni les écrans de jeu (remplacées par des couleurs unies). `cursor.png` n'est pas encore défini comme curseur personnalisé dans `options.rpy`.
 - **Nom du jeu** : `config.name` dans `options.rpy` affiche encore « Le Manoir-Labyrinthe » et doit être mis à jour en « Le Manoir des Ombres » pour correspondre au titre actuel.
 - **Audio** : aucune musique ni bruitage intégré pour l'instant (`config.main_menu_music` est commenté dans `options.rpy` en attendant les fichiers).
-- **Énigmes fixes** : les 9 énigmes et leurs réponses sont codées en dur dans `variables.rpy`, sans tirage aléatoire ni variante.
 
 ## Roadmap
 

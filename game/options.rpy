@@ -46,10 +46,8 @@ define config.autosave_frequency = 3  # minutes
 
 ## Confort de lecture / anti-triche des énigmes -------------------
 
-# On empêche le Ctrl-skip et le clic rapide de "sauter" une énigme
-# sans que le joueur ait réellement répondu : les écrans choix_piece et
-# menu_enigme sont "modal", donc déjà protégés, mais on verrouille aussi
-# le skip global pour rester cohérent avec la tension du jeu.
+# Le skip n'avance que dans le texte déjà lu : les écrans choix_piece et
+# menu_enigme sont "modal" et attendent toujours une vraie réponse.
 define config.allow_skipping = True
 
 # Vitesse de défilement du texte par défaut (caractères/seconde)
@@ -58,12 +56,11 @@ default preferences.text_cps = 40
 
 ## Rollback (retour en arrière) ------------------------------------
 
-# On désactive le rollback pendant les énigmes serait idéal (pour empêcher
-# un joueur de "annuler" une mauvaise réponse) : cela se gère avec
-# $ renpy.block_rollback() juste après chaque tirage de résultat dans
-# script.rpy plutôt qu'ici, mais on limite déjà la profondeur globale :
-define config.rollback_enabled = True
-define config.rollback_length = 20
+# Désactivé : une réponse est définitive, le joueur ne peut pas revenir
+# en arrière pour corriger une erreur. script.rpy appelle aussi
+# renpy.block_rollback() après chaque réponse, par sécurité.
+define config.rollback_enabled = False
+define config.hard_rollback_limit = 0
 
 
 ## Musique / son ------------------------------------------------

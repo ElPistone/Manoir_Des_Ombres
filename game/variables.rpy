@@ -3,97 +3,129 @@
 # Variables globales et données des énigmes
 ########################################
 
+# Règle : le joueur doit réussir 3 énigmes D'AFFILÉE, de difficulté
+# croissante (niveau 0 → 1 → 2). Une seule erreur et le manoir garde tout.
+define serie_requise = 3
+define total_pieces = 4           # le fragment du hall + un par porte franchie
+
 default score = 0
-default total_pieces = 10         # nombre total de morceaux pour compléter la carte
-default pieces_owned = []         # liste des pièces possédées, ex: ["piece_01", "piece_03"]
-default door_index = 0            # porte actuelle dans doors_data
+default pieces_owned = []         # liste des pièces possédées, ex: ["piece_01", "piece_02"]
+default niveau = 0                # porte actuelle = niveau de difficulté (0, 1, 2)
+default enigme_courante = None    # énigme tirée pour la porte en cours
+default choix_melanges = []       # réponses de l'énigme, dans un ordre aléatoire
 
 init python:
 
-    # Chaque porte = une énigme à choix multiples.
-    # "choices"  : liste de 4 propositions (texte affiché sur les boutons)
-    # "correct"  : index (0 à 3) de la bonne réponse dans "choices"
-    # "reward_piece" : pièce de carte obtenue en cas de bonne réponse
-    doors_data = [
+    # Une porte par niveau : décor, texte d'arrivée et récompense.
+    # "bg" est le fond dédié ; "bg_secours" sert tant qu'il n'existe pas.
+    portes = [
         {
-            "id": "door_01",
-            "bg": "bg_corridor_01",
-            "intro": "Une porte de chêne sculptée grince devant vous, ses gonds rouillés protestant dans le silence. Des visages peints vous observent depuis les cadres alignés le long du couloir, et une voix, à peine audible, murmure une énigme entre les lattes du bois.",
-            "riddle": "Je n'ai pas de corps mais je grandis, pas de poumons mais j'ai besoin d'air. Qui suis-je ?",
-            "choices": ["Le vent", "Le feu", "Le temps", "L'ombre"],
-            "correct": 1,
+            "bg": "bg_door_level_0",
+            "bg_secours": "bg_corridor_01",
+            "intro": "Au bout du premier couloir, une porte de chêne toute simple vous attend, éclairée par une bougie posée sur un guéridon. Une voix douce, presque amusée, murmure à travers le bois.",
+            "points": 10,
             "reward_piece": "piece_02",
         },
         {
-            "id": "door_02",
-            "bg": "bg_library",
-            "intro": "Dans la bibliothèque poussiéreuse, un livre s'ouvre seul sur une page couverte d'une écriture ancienne. L'air sent le vieux papier et la cire fondue ; quelque chose, ici, attend une réponse.",
-            "riddle": "Plus je suis grand, moins je pèse. Qui suis-je ?",
-            "choices": ["Un trou", "Un nuage", "Un rêve", "Un écho"],
-            "correct": 0,
+            "bg": "bg_door_level_1",
+            "bg_secours": "bg_library",
+            "intro": "La deuxième porte se cache au fond de la bibliothèque, ses panneaux couverts de lettres gravées. L'air sent le vieux papier, et la voix, cette fois, ne sourit plus.",
+            "points": 20,
             "reward_piece": "piece_03",
         },
         {
-            "id": "door_03",
-            "bg": "bg_stairs",
-            "intro": "L'escalier en colimaçon semble ne jamais finir, chaque marche craquant sous vos pas comme pour vous avertir. Une porte basse, à mi-hauteur, porte une énigme gravée à même la pierre.",
-            "riddle": "On me lance, je vole, mais je ne reviens jamais tout seul. Qui suis-je ?",
-            "choices": ["Une flèche", "Un caillou", "Un oiseau", "Une plume"],
-            "correct": 1,
+            "bg": "bg_door_level_2",
+            "bg_secours": "bg_secret_room",
+            "intro": "La dernière porte est noire, immense, striée de runes dorées qui pulsent comme un cœur. Derrière elle, vous le sentez, il y a la sortie. La voix gronde maintenant, grave et patiente.",
+            "points": 40,
             "reward_piece": "piece_04",
         },
-        {
-            "id": "door_04",
-            "bg": "bg_cellar",
-            "intro": "La cave sent l'humidité et la cire fondue. Des tonneaux effondrés bordent un mur suintant, et sur la porte close au fond, des mots à peine lisibles vous mettent au défi.",
-            "riddle": "Plus j'ai de gardiens, moins je suis gardé. Qui suis-je ?",
-            "choices": ["Un secret", "Un trésor", "Un château", "Un mensonge"],
-            "correct": 0,
-            "reward_piece": "piece_05",
-        },
-        {
-            "id": "door_05",
-            "bg": "bg_corridor_02",
-            "intro": "Un miroir fendu reflète une pièce qui n'existe pas, son tain écaillé renvoyant une image légèrement décalée de la vôtre. La porte, juste à côté, semble attendre que vous répondiez à son reflet.",
-            "riddle": "Je nais le soir et je meurs le matin. Qui suis-je ?",
-            "choices": ["La lune", "La nuit", "La bougie", "Le rêve"],
-            "correct": 1,
-            "reward_piece": "piece_06",
-        },
-        {
-            "id": "door_06",
-            "bg": "bg_door_generic",
-            "intro": "Une porte sans poignée, gravée de symboles que vous ne reconnaissez pas, se dresse au bout d'un renfoncement sombre. Une seule ligne de lumière filtre sous le battant.",
-            "riddle": "On me trouve une fois dans une minute, deux fois dans un moment, mais jamais dans mille ans. Quelle lettre suis-je ?",
-            "choices": ["La lettre M", "La lettre N", "La lettre T", "La lettre S"],
-            "correct": 0,
-            "reward_piece": "piece_07",
-        },
-        {
-            "id": "door_07",
-            "bg": "bg_attic",
-            "intro": "Le grenier est glacial, l'air chargé de poussière et de vieux tissus. Chaque planche grince sous vos pas, comme pour prévenir la maison de votre présence.",
-            "riddle": "Je n'ai ni yeux, ni oreilles, ni bouche, mais je vous suis partout où la lumière va. Qui suis-je ?",
-            "choices": ["Un fantôme", "Une ombre", "Un reflet", "Un souvenir"],
-            "correct": 1,
-            "reward_piece": "piece_08",
-        },
-        {
-            "id": "door_08",
-            "bg": "bg_corridor_01",
-            "intro": "Une porte plus petite que les autres, presque cachée sous une tenture élimée, semble hésiter à s'ouvrir. Le silence, ici, est plus épais qu'ailleurs.",
-            "riddle": "Je suis toujours devant toi, mais tu ne me verras jamais. Qui suis-je ?",
-            "choices": ["Le passé", "L'avenir", "Le présent", "Le destin"],
-            "correct": 1,
-            "reward_piece": "piece_09",
-        },
-        {
-            "id": "door_09",
-            "bg": "bg_secret_room",
-            "intro": "La dernière porte avant la sortie. L'air lui-même semble retenir son souffle, et une odeur d'encre fraîche flotte, incongrue, dans cette pièce oubliée.",
-            "riddle": "Plus je sèche, plus je deviens mouillé. Qui suis-je ?",
-            "choices": ["Une serviette", "Une éponge", "Un miroir", "Un livre"],
-            "correct": 0,
-            "reward_piece": "piece_10",
-        },
     ]
+
+    # Énigmes classées par difficulté. Une est tirée au hasard pour chaque
+    # porte, et ses réponses sont mélangées : "answer" est donc le TEXTE de
+    # la bonne réponse, pas sa position.
+    enigmes_par_niveau = [
+        # --- Niveau 0 : volontairement très simple ---
+        [
+            {
+                "riddle": "Je suis blanche, je tombe du ciel en hiver et je fonds au soleil. Qui suis-je ?",
+                "choices": ["La neige", "La pluie", "Le sable", "La cendre"],
+                "answer": "La neige",
+            },
+            {
+                "riddle": "Je brille dans le ciel la nuit, et ma forme change au fil du mois. Qui suis-je ?",
+                "choices": ["La lune", "Le soleil", "Un nuage", "Un oiseau"],
+                "answer": "La lune",
+            },
+            {
+                "riddle": "Je porte le nom de ma propre couleur, et l'on me mange en hiver. Quel fruit suis-je ?",
+                "choices": ["L'orange", "La pomme", "La poire", "La fraise"],
+                "answer": "L'orange",
+            },
+            {
+                "riddle": "On me monte et on me descend, mais je ne bouge jamais. Qui suis-je ?",
+                "choices": ["Un escalier", "Un ascenseur", "Un ballon", "Un cheval"],
+                "answer": "Un escalier",
+            },
+        ],
+        # --- Niveau 1 : il faut réfléchir ---
+        [
+            {
+                "riddle": "Plus on m'enlève de matière, plus je deviens grand. Qui suis-je ?",
+                "choices": ["Un trou", "Un mur", "Un arbre", "Une montagne"],
+                "answer": "Un trou",
+            },
+            {
+                "riddle": "Je suis plein de trous, et pourtant je retiens l'eau. Qui suis-je ?",
+                "choices": ["Une éponge", "Un seau", "Un filet", "Une passoire"],
+                "answer": "Une éponge",
+            },
+            {
+                "riddle": "Plus je sèche, plus je suis mouillée. Qui suis-je ?",
+                "choices": ["Une serviette", "Une éponge", "Un miroir", "Un livre"],
+                "answer": "Une serviette",
+            },
+            {
+                "riddle": "Il est à vous, mais les autres s'en servent bien plus que vous. Qu'est-ce que c'est ?",
+                "choices": ["Votre prénom", "Votre maison", "Votre ombre", "Votre voix"],
+                "answer": "Votre prénom",
+            },
+        ],
+        # --- Niveau 2 : vraiment difficile, souvent un piège ---
+        [
+            {
+                "riddle": "Celui qui me fabrique me vend. Celui qui m'achète ne se sert pas de moi. Celui qui se sert de moi ne me voit jamais. Qui suis-je ?",
+                "choices": ["Un cercueil", "Un cadeau", "Une perruque", "Un miroir"],
+                "answer": "Un cercueil",
+            },
+            {
+                "riddle": "Le père d'Éléonore a cinq filles : Lala, Lélé, Lili et Lolo. Comment s'appelle la cinquième ?",
+                "choices": ["Éléonore", "Lulu", "Lyly", "Lala"],
+                "answer": "Éléonore",
+            },
+            {
+                "riddle": "On me trouve deux fois dans « année », une fois dans « nuit », et jamais dans « jour ». Qui suis-je ?",
+                "choices": ["La lettre N", "La lettre A", "La lettre U", "La lettre I"],
+                "answer": "La lettre N",
+            },
+            {
+                "riddle": "Un berger possède dix-sept moutons. Tous meurent, sauf neuf. Combien lui en reste-t-il ?",
+                "choices": ["Neuf", "Huit", "Dix-sept", "Aucun"],
+                "answer": "Neuf",
+            },
+        ],
+    ]
+
+    def tirer_enigme(niv):
+        """Tire une énigme du niveau donné et renvoie (énigme, réponses mélangées)."""
+        enigme = renpy.random.choice(enigmes_par_niveau[niv])
+        choix = list(enigme["choices"])
+        renpy.random.shuffle(choix)
+        return enigme, choix
+
+    def fond_porte(porte):
+        """Fond dédié de la porte s'il existe, sinon le fond de secours."""
+        if renpy.has_image(porte["bg"]):
+            return porte["bg"]
+        return porte["bg_secours"]
