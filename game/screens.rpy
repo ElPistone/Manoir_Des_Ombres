@@ -1,5 +1,5 @@
 ########################################
-# LE MANOIR-LABYRINTHE — screens.rpy
+# LE MANOIR DES OMBRES — screens.rpy
 # Écrans du jeu : composants, gameplay, menu principal, sauvegarde
 ########################################
 
@@ -29,7 +29,8 @@ screen gm_panel(pad=40, xa=0.5, ya=0.5):
 
 
 # Bouton : label, action, largeur, hauteur, taille du texte, image (mode PNG),
-# délai d'apparition (pour faire entrer les boutons l'un après l'autre)
+# délai d'apparition (pour faire entrer les boutons l'un après l'autre).
+# Avec act=None, le bouton est inactif et apparaît grisé.
 screen gm_bouton(label, act, w=420, h=80, fs=28, img="btn_start", d=0.0):
     frame:
         at bouton_apparait(d)
@@ -42,17 +43,17 @@ screen gm_bouton(label, act, w=420, h=80, fs=28, img="btn_start", d=0.0):
             action act
             activate_sound "audio/clic.ogg"
             padding (3, 3)
-            background (Frame("images/ui/" + img + ".png", 40, 40) if gm_art_ui else Solid(gm_gold))
+            background (Frame("images/ui/" + img + ".png", 40, 40) if gm_art_ui else Solid(gm_gold if act is not None else "#6b5a35"))
             hover_background (Frame("images/ui/" + img + "_hover.png", 40, 40) if gm_art_ui else Solid(gm_gold_light))
             if gm_art_ui:
-                text label size fs color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5
+                text label style "gm_titre" size fs color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5
             else:
                 frame:
-                    background Solid(gm_bordeaux)
+                    background Solid(gm_bordeaux if act is not None else "#24141b")
                     xfill True
                     yfill True
-                    padding (0, 0)
-                    text label size fs color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5 text_align 0.5
+                    padding (8, 0)
+                    text label style "gm_titre" size fs color (gm_parchemin if act is not None else "#7d7262") hover_color gm_gold_light xalign 0.5 yalign 0.5 text_align 0.5
 
 
 ## ------------------------------------------------------------
@@ -73,7 +74,7 @@ screen say(who, what):
         xsize 1240
         ysize 230
         yoffset -24
-        padding (100, 38, 100, 38)
+        padding (100, 34, 100, 34)
         background "images/ui/frame_dialogue_bas.jpg"
 
         vbox:
@@ -82,104 +83,248 @@ screen say(who, what):
             spacing 6
 
             if who is not None:
-                text who id "who" color gm_bordeaux size 24 bold True
+                text who id "who" color gm_bordeaux size 26 bold True
 
-            text what id "what" color "#2b1d0e" size 27 line_spacing 6 xfill True
+            # Encre brune sur parchemin : bien lisible
+            text what id "what" color gm_encre size 30 line_spacing 4 xfill True
+
+
+## ------------------------------------------------------------
+## MENU RAPIDE (en bas à droite, à côté de la boîte de dialogue)
+## ------------------------------------------------------------
+
+default quick_menu = True
+
+init python:
+    config.overlay_screens.append("quick_menu")
+
+style gm_quick_button is default:
+    xalign 1.0
+    padding (10, 3)
+style gm_quick_button_text is gm_titre:
+    size 22
+    color "#c9a24aaa"
+    hover_color "#f4e4bc"
+    insensitive_color "#c9a24a44"
+
+screen quick_menu():
+    zorder 100
+
+    if quick_menu:
+        vbox:
+            style_prefix "gm_quick"
+            xalign 0.995
+            yalign 0.975
+            spacing 0
+
+            textbutton "Historique" action ShowMenu("history")
+            textbutton "Sauvegarder" action ShowMenu("save")
+            textbutton "Charger" action ShowMenu("load")
+            textbutton "Réglages" action ShowMenu("preferences")
+            textbutton "Menu" action MainMenu()
 
 
 ## ------------------------------------------------------------
 ## ÉCRANS DE GAMEPLAY
 ## ------------------------------------------------------------
 
-# --- Choix du morceau de carte à miser ---
-screen choix_piece(pieces):
+# --- Choix du ou des morceaux de carte à miser ---
+# Renvoie toujours une liste : [piece] ou, en double mise, [piece_a, piece_b].
+screen choix_piece(pieces, double_possible=False, sortie=False):
     modal True
     zorder 200
 
+    default mode_double = False
+    default selection = []
+
     add Solid("#000000aa") at voile_apparait
 
-    use gm_panel(pad=50):
+    use gm_panel(pad=45):
         vbox:
-            spacing 30
+            spacing 22
+            xsize 1160
 
-            text "Quel morceau de carte allez-vous miser ?" size 32 color gm_parchemin xalign 0.5
+            if sortie:
+                text "Quel morceau risquez-vous à la porte de sortie ?" style "gm_titre" size 38 xalign 0.5
+            elif mode_double:
+                text "Choisissez les deux morceaux à miser" style "gm_titre" size 38 xalign 0.5
+            else:
+                text "Quel morceau de carte allez-vous miser ?" style "gm_titre" size 38 xalign 0.5
+
+            text "Le morceau misé reste sous la porte : son pouvoir ne vous aidera pas pour cette énigme." size 25 color gm_parchemin_sombre xalign 0.5 text_align 0.5
 
             hbox:
                 xalign 0.5
-                xsize 690
-                spacing 15
-                box_wrap True
-                box_wrap_spacing 15
+                spacing 20
 
                 for i, piece in enumerate(pieces):
+                    $ frag = fragments[piece]
+                    $ choisi = piece in selection
                     frame:
                         at bouton_apparait(0.1 + i * 0.08)
                         background None
                         padding (0, 0)
                         button:
                             at bouton_survol
-                            xysize (150, 150)
-                            action Return(piece)
-                            activate_sound "audio/clic.ogg"
+                            xysize (260, 340)
                             padding (3, 3)
-                            background Solid(gm_gold)
+                            background Solid(gm_gold_light if choisi else gm_gold)
                             hover_background Solid(gm_gold_light)
-                            # Vignette du vrai morceau de carte, numéro en surimpression
-                            fixed:
-                                add Transform("images/map/" + piece + ".jpg", xysize=(144, 144), fit="cover")
-                                add Solid("#0d152466")
-                                text piece.replace("piece_", "N° ") size 26 color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5 outlines [(2, "#0d1524", 0, 0)]
+                            activate_sound "audio/clic.ogg"
+                            action (ToggleSetMembership(selection, piece) if mode_double else Return([piece]))
+
+                            frame:
+                                background Solid("#2a1019" if choisi else "#140d16")
+                                xfill True
+                                yfill True
+                                padding (10, 10)
+                                vbox:
+                                    spacing 8
+                                    xfill True
+                                    add Transform("images/map/" + piece + ".jpg", xysize=(234, 150), fit="cover") xalign 0.5
+                                    text frag["nom"] style "gm_titre" size 23 color gm_gold xalign 0.5 text_align 0.5
+                                    if piece == "piece_04" and cle_utilisee:
+                                        text "Pouvoir déjà utilisé." size 21 color "#8a7f6a" xalign 0.5 text_align 0.5
+                                    else:
+                                        text frag["effet"] size 21 color gm_parchemin xalign 0.5 text_align 0.5
+
+            if double_possible:
+                vbox:
+                    spacing 12
+                    xalign 0.5
+                    hbox:
+                        xalign 0.5
+                        spacing 30
+                        if mode_double:
+                            use gm_bouton("Valider la double mise", (Return(list(selection)) if len(selection) == 2 else None), 460, 70, 27, d=0.0)
+                            use gm_bouton("Annuler", [SetScreenVariable("mode_double", False), SetScreenVariable("selection", [])], 240, 70, 27, d=0.0)
+                        else:
+                            use gm_bouton("Tout risquer : miser les deux", SetScreenVariable("mode_double", True), 520, 70, 27, d=0.4)
+                    text "Double mise : énigme plus difficile, mais deux morceaux gagnés si vous répondez juste. Une erreur vous coûte les deux." size 22 color gm_parchemin_sombre xalign 0.5 text_align 0.5 xsize 1000
 
 
-# --- Énigme à choix multiples : 2 réponses par ligne, sur 2 lignes ---
-# Renvoie le texte de la réponse choisie (les réponses sont mélangées).
-screen menu_enigme(riddle_text, choices):
+# --- Énigme : à choix multiples (2 réponses par ligne) ou à réponse libre ---
+# Renvoie le texte de la réponse, ou "__sablier__" pour changer d'énigme.
+screen menu_enigme(enigme, choix, actifs=[], barree=None, sablier_dispo=False):
     modal True
     zorder 200
 
+    default reponse = ""
+
     add Solid("#000000aa") at voile_apparait
 
-    use gm_panel(pad=50):
-        vbox:
+    use gm_panel(pad=45):
+        hbox:
             spacing 40
 
-            text riddle_text color gm_parchemin size 32 xsize 1000 text_align 0.5 xalign 0.5
+            if enigme.get("illus"):
+                add Transform("images/riddles/enigme_" + enigme["illus"] + ".webp", xysize=(340, 340), fit="contain") yalign 0.5 at voile_apparait
 
-            hbox:
-                xalign 0.5
-                xsize 1020
-                spacing 30
-                box_wrap True
-                box_wrap_spacing 30
+            vbox:
+                spacing 28
+                xsize (960 if enigme.get("illus") else 1080)
 
-                for i, option in enumerate(choices):
-                    use gm_bouton(option, Return(option), 490, 90, 26, "frame_dialogue", d=0.25 + i * 0.1)
+                text enigme["riddle"] color gm_parchemin size 36 xalign 0.5 text_align 0.5 xfill True
+
+                # Pouvoir de la Lanterne : un indice
+                if "Lanterne" in actifs:
+                    text ("{i}Lanterne : " + enigme["indice"] + "{/i}") size 26 color gm_gold_light xalign 0.5 text_align 0.5 xfill True
+
+                if enigme.get("saisie"):
+                    # Pouvoir de l'Encre : la première lettre
+                    if "Encre" in actifs:
+                        text ("{i}Encre : la réponse commence par « " + premiere_lettre(enigme) + " ».{/i}") size 26 color gm_gold_light xalign 0.5 text_align 0.5
+
+                    frame:
+                        xalign 0.5
+                        xsize 700
+                        background Solid(gm_gold)
+                        padding (3, 3)
+                        frame:
+                            background Solid(gm_bordeaux)
+                            xfill True
+                            padding (20, 12)
+                            input:
+                                value ScreenVariableInputValue("reponse", returnable=True)
+                                length 32
+                                pixel_width 640
+                                size 34
+                                color gm_parchemin
+                                xalign 0.5
+
+                    text "Tapez votre réponse puis appuyez sur Entrée." size 22 color gm_parchemin_sombre xalign 0.5
+                    hbox:
+                        xalign 0.5
+                        use gm_bouton("Répondre", (Return(reponse) if reponse.strip() else None), 320, 70, 28, d=0.3)
+
+                else:
+                    hbox:
+                        xalign 0.5
+                        spacing 30
+                        box_wrap True
+                        box_wrap_spacing 30
+                        xsize (940 if enigme.get("illus") else 1020)
+
+                        for i, option in enumerate(choix):
+                            # Pouvoir de l'Encre : une mauvaise réponse barrée
+                            if option == barree:
+                                use gm_bouton("{s}" + option + "{/s}", None, (455 if enigme.get("illus") else 490), 90, 27, "frame_dialogue", d=0.25 + i * 0.1)
+                            else:
+                                use gm_bouton(option, Return(option), (455 if enigme.get("illus") else 490), 90, 27, "frame_dialogue", d=0.25 + i * 0.1)
+
+                # Pouvoir du Sablier : une autre énigme, une fois par porte
+                if sablier_dispo:
+                    textbutton "Retourner le sablier (autre énigme)":
+                        action Return("__sablier__")
+                        xalign 0.5
+                        text_style "gm_titre"
+                        text_size 25
+                        text_color gm_gold
+                        text_hover_color gm_gold_light
 
 
-# --- HUD (haut droite) : manche en cours + accès à la carte ---
+# --- HUD (haut droite) : porte en cours, carte, pouvoirs ---
+# Au-dessus du voile des écrans de choix, pour rester lisible.
 screen hud_jeu():
-    zorder 100
+    zorder 210
 
-    hbox:
+    vbox:
         at voile_apparait
-        xalign 0.98
-        yalign 0.03
-        spacing 15
+        xalign 0.985
+        yalign 0.025
+        spacing 8
 
-        frame:
-            background Solid("#0d1524cc")
-            padding (18, 8)
-            text ("Porte : %d/%d" % (max(manche, 1), max_manches)) size 26 color gm_gold
+        hbox:
+            xalign 1.0
+            spacing 12
 
-        button:
-            background Solid("#0d1524cc")
-            hover_background Solid(gm_bordeaux)
-            padding (18, 8)
-            action Show("carte_puzzle")
-            text ("Carte : %d/%d" % (len(pieces_owned), total_pieces)) size 26 color gm_gold hover_color gm_gold_light
+            frame:
+                background Solid("#0d1524dd")
+                padding (14, 6)
+                hbox:
+                    spacing 10
+                    add "images/ui/icone_cle.webp" zoom 0.42 yalign 0.5
+                    text ("Porte %d/%d" % (max(manche, 1), max_manches)) style "gm_titre" size 28 color gm_gold yalign 0.5
+
+            button:
+                background Solid("#0d1524dd")
+                hover_background Solid(gm_bordeaux)
+                padding (14, 6)
+                action Show("carte_puzzle")
+                hbox:
+                    spacing 10
+                    add "images/ui/icone_carte.webp" zoom 0.5 yalign 0.5
+                    text ("Carte %d/%d" % (len(pieces_owned), total_pieces)) style "gm_titre" size 28 color gm_gold hover_color gm_gold_light yalign 0.5
+
+        if pieces_owned:
+            frame:
+                xalign 1.0
+                background Solid("#0d1524bb")
+                padding (14, 4)
+                text ("Pouvoirs : " + ", ".join(fragments[p]["pouvoir"] for p in sorted(pieces_owned) if not (p == "piece_04" and cle_utilisee))) size 22 color gm_parchemin
 
 
-# --- Carte en cours de reconstitution ---
+# --- Carte en cours de reconstitution, et notes au dos des fragments ---
 screen carte_puzzle():
     modal True
     zorder 250
@@ -188,38 +333,39 @@ screen carte_puzzle():
 
     use gm_panel(pad=40):
         vbox:
-            spacing 25
+            spacing 22
 
-            text "Votre carte" size 34 color gm_parchemin xalign 0.5
+            text "Le plan du manoir Blackwood" style "gm_titre" size 38 xalign 0.5
 
-            if map_pieces_positions:
-                # Vraie carte (nécessite positions_carte.rpy et images/map/piece_XX.jpg)
-                $ echelle = min(900.0 / map_full_width, 640.0 / map_full_height)
+            hbox:
+                spacing 40
+
+                $ echelle = min(600.0 / map_full_width, 600.0 / map_full_height)
                 fixed:
-                    xalign 0.5
                     xysize (int(map_full_width * echelle), int(map_full_height * echelle))
                     add Solid("#1a2236")
-                    for pid in pieces_owned:
-                        if pid in map_pieces_positions and renpy.loadable("images/map/" + pid + ".jpg"):
-                            $ pp = map_pieces_positions[pid]
-                            add Transform("images/map/" + pid + ".jpg", xysize=(int(pp["width"] * echelle), int(pp["height"] * echelle))) xpos int(pp["x"] * echelle) ypos int(pp["y"] * echelle)
-            else:
-                # Version simplifiée : une tuile par morceau
-                hbox:
-                    xalign 0.5
-                    xsize 820
-                    spacing 12
-                    box_wrap True
-                    box_wrap_spacing 12
+                    for pid, pp in sorted(map_pieces_positions.items()):
+                        $ morceau = Transform("images/map/" + pid + ".jpg", xysize=(int(pp["width"] * echelle), int(pp["height"] * echelle)))
+                        if pid in pieces_owned:
+                            add morceau xpos int(pp["x"] * echelle) ypos int(pp["y"] * echelle)
+                        else:
+                            # Fragment encore perdu : une zone de brouillard
+                            add morceau at fragment_brouille xpos int(pp["x"] * echelle) ypos int(pp["y"] * echelle)
+                            text "?" style "gm_titre" size 90 color "#c9a24a88" xanchor 0.5 yanchor 0.5 xpos int((pp["x"] + pp["width"] / 2) * echelle) ypos int((pp["y"] + pp["height"] / 2) * echelle)
 
-                    for n in range(1, total_pieces + 1):
-                        $ pid = "piece_%02d" % n
-                        frame:
-                            xysize (150, 90)
-                            background (Solid(gm_gold) if pid in pieces_owned else Solid("#1a2236"))
-                            text ("N° %d" % n) xalign 0.5 yalign 0.5 size 24 color (gm_bordeaux if pid in pieces_owned else "#5b6478")
+                vbox:
+                    xsize 560
+                    spacing 16
+                    text "Notes au dos des fragments" style "gm_titre" size 28 color gm_gold
+                    for pid in sorted(pieces_owned):
+                        vbox:
+                            spacing 2
+                            text fragments[pid]["nom"] style "gm_titre" size 23 color gm_gold_light
+                            text fragments[pid]["lore"] italic True size 22 color gm_parchemin
+                    if len(pieces_owned) < total_pieces:
+                        text "D'autres notes attendent sur les morceaux perdus…" italic True size 21 color "#8a7f6a"
 
-            textbutton "Fermer" action Hide("carte_puzzle") xalign 0.5 text_color gm_gold text_hover_color gm_gold_light text_size 26
+            textbutton "Fermer" action Hide("carte_puzzle") xalign 0.5 text_style "gm_titre" text_color gm_gold text_hover_color gm_gold_light text_size 28
 
 
 ## ------------------------------------------------------------
@@ -238,14 +384,30 @@ screen main_menu():
         ypos 600
         spacing 18
 
-        use gm_bouton("Commencer", Start(), 420, 80, 30, "btn_start", d=0.4)
-        use gm_bouton("Charger", ShowMenu("load"), 420, 80, 30, "btn_load", d=0.55)
-        use gm_bouton("Son", ShowMenu("preferences"), 420, 80, 30, "btn_load", d=0.7)
-        use gm_bouton("Quitter", Quit(confirm=True), 420, 80, 30, "btn_quit", d=0.85)
+        use gm_bouton("Commencer", Start(), 420, 80, 32, "btn_start", d=0.4)
+        use gm_bouton("Charger", ShowMenu("load"), 420, 80, 32, "btn_load", d=0.55)
+        use gm_bouton("Réglages", ShowMenu("preferences"), 420, 80, 32, "btn_load", d=0.7)
+        use gm_bouton("Quitter", Quit(confirm=True), 420, 80, 32, "btn_quit", d=0.85)
+
+    # Fins découvertes (gardées d'une partie à l'autre)
+    frame:
+        at voile_apparait
+        xpos 30
+        yalign 0.97
+        background Solid("#0d1524cc")
+        padding (20, 12)
+        vbox:
+            spacing 4
+            text ("Fins découvertes : %d/%d" % (len([f for f in fins if f[0] in persistent.fins_vues]), len(fins))) style "gm_titre" size 26 color gm_gold
+            for code, nom in fins:
+                if code in persistent.fins_vues:
+                    text ("« " + nom + " »") size 22 color gm_parchemin
+                else:
+                    text "« ??? »" size 22 color "#6b6456"
 
 
 ## ------------------------------------------------------------
-## MENU DE JEU (conteneur Sauvegarder / Charger)
+## MENU DE JEU (conteneur Sauvegarder / Charger / Réglages / Historique)
 ## ------------------------------------------------------------
 
 screen game_menu(title, scroll=None):
@@ -266,22 +428,33 @@ screen game_menu(title, scroll=None):
             padding (40, 30)
             vbox:
                 spacing 20
-                text title color gm_parchemin size 34 xalign 0.5
+                text title style "gm_titre" size 38 xalign 0.5
                 transclude
 
     use navigation
 
 
+style gm_nav_button is default
+style gm_nav_button_text is gm_titre:
+    size 28
+    color "#c9a24a"
+    hover_color "#f4e4bc"
+    selected_color "#f4e4bc"
+
 screen navigation():
     hbox:
+        style_prefix "gm_nav"
         align (0.5, 0.95)
         spacing 40
 
-        textbutton "Retour" action Return() text_color gm_gold text_hover_color gm_gold_light text_size 26
-        textbutton "Sauvegarder" action ShowMenu("save") text_color gm_gold text_hover_color gm_gold_light text_size 26
-        textbutton "Charger" action ShowMenu("load") text_color gm_gold text_hover_color gm_gold_light text_size 26
-        textbutton "Son" action ShowMenu("preferences") text_color gm_gold text_hover_color gm_gold_light text_size 26
-        textbutton "Menu principal" action MainMenu(confirm=True) text_color gm_gold text_hover_color gm_gold_light text_size 26
+        textbutton "Retour" action Return()
+        if not main_menu:
+            textbutton "Historique" action ShowMenu("history")
+            textbutton "Sauvegarder" action ShowMenu("save")
+        textbutton "Charger" action ShowMenu("load")
+        textbutton "Réglages" action ShowMenu("preferences")
+        if not main_menu:
+            textbutton "Menu principal" action MainMenu(confirm=True)
 
 
 ## ------------------------------------------------------------
@@ -325,16 +498,43 @@ screen file_slots():
 
                         vbox:
                             yalign 0.5
-                            text FileSlotName(i) color gm_gold size 20
-                            text FileTime(i, format=_("%d/%m/%Y - %H:%M"), empty=_("Emplacement vide")) color gm_parchemin size 16
+                            text FileSlotName(i) style "gm_titre" color gm_gold size 22
+                            text FileTime(i, format=_("%d/%m/%Y - %H:%M"), empty=_("Emplacement vide")) color gm_parchemin size 20
 
 
 ## ------------------------------------------------------------
-## RÉGLAGES DU SON
+## HISTORIQUE DES DIALOGUES
+## ------------------------------------------------------------
+
+screen history():
+    tag menu
+    predict False
+
+    use game_menu(_("Historique")):
+        viewport:
+            xysize (1300, 640)
+            scrollbars "vertical"
+            mousewheel True
+            draggable True
+            yinitial 1.0
+
+            vbox:
+                spacing 16
+                xsize 1260
+
+                if not _history_list:
+                    text "Rien à relire pour l'instant." size 26 color gm_parchemin_sombre
+
+                for h in _history_list:
+                    text h.what substitute False size 27 color gm_parchemin xsize 1240
+
+
+## ------------------------------------------------------------
+## RÉGLAGES (son et texte)
 ## ------------------------------------------------------------
 
 screen preferences():
-    use game_menu(_("Réglages du son")):
+    use game_menu(_("Réglages")):
         vbox:
             spacing 25
             xsize 700
@@ -342,10 +542,15 @@ screen preferences():
             for titre, reglage in [("Ambiance", "music volume"), ("Effets sonores", "sound volume")]:
                 vbox:
                     spacing 8
-                    text titre color gm_gold size 26
+                    text titre style "gm_titre" color gm_gold size 28
                     bar value Preference(reglage) xsize 700 ysize 30 left_bar Solid(gm_gold) right_bar Solid("#1a2236") thumb None
 
-            textbutton "Couper tous les sons" action Preference("all mute", "toggle") text_color gm_gold text_hover_color gm_gold_light text_selected_color gm_gold_light text_size 24
+            vbox:
+                spacing 8
+                text "Vitesse du texte" style "gm_titre" color gm_gold size 28
+                bar value Preference("text speed") xsize 700 ysize 30 left_bar Solid(gm_gold) right_bar Solid("#1a2236") thumb None
+
+            textbutton "Couper tous les sons" action Preference("all mute", "toggle") text_style "gm_titre" text_color gm_gold text_hover_color gm_gold_light text_selected_color gm_gold_light text_size 26
 
 
 ## ------------------------------------------------------------
@@ -362,13 +567,13 @@ screen confirm(message, yes_action, no_action):
         vbox:
             spacing 30
 
-            text message color gm_parchemin size 28 xsize 700 text_align 0.5 xalign 0.5
+            text message color gm_parchemin size 30 xsize 700 text_align 0.5 xalign 0.5
 
             hbox:
                 xalign 0.5
                 spacing 30
-                use gm_bouton("Oui", yes_action, 200, 70, 26, "btn_start")
-                use gm_bouton("Non", no_action, 200, 70, 26, "btn_quit")
+                use gm_bouton("Oui", yes_action, 200, 70, 28, "btn_start")
+                use gm_bouton("Non", no_action, 200, 70, 28, "btn_quit")
 
 
 ## ------------------------------------------------------------
@@ -387,6 +592,9 @@ screen notify(message):
         frame:
             background Solid(gm_night)
             padding (36, 14)
-            text message size 28 color gm_gold_light
+            hbox:
+                spacing 14
+                add "images/ui/icone_carte.webp" zoom 0.5 yalign 0.5
+                text message style "gm_titre" size 30 color gm_gold_light yalign 0.5
 
     timer 2.8 action Hide("notify")

@@ -1,19 +1,23 @@
 ########################################
-# LE MANOIR-LABYRINTHE — options.rpy
+# LE MANOIR DES OMBRES — options.rpy
 # Configuration générale du jeu
 ########################################
 
 ## Identité du jeu -------------------------------------------
 
 define config.name = _("Le Manoir des Ombres")
-define config.version = "1.0"
+define config.version = "1.1"
 define build.name = "LeManoirLabyrinthe"
 
 # Titre de la fenêtre (identique au nom du jeu)
 define config.window_title = config.name
 
-# Icône de la fenêtre (256x256, tirée de icon_score.png)
-define config.window_icon = "images/ui/icon_window.png"
+# Icône de la fenêtre (256x256). Rangée dans gui/ car les .png de images/
+# ne sont pas livrés dans le build (voir plus bas).
+define config.window_icon = "gui/window_icon.png"
+
+# Curseur personnalisé : une petite clé ancienne (pointe en haut à gauche)
+define config.mouse = {"default": [("gui/curseur_cle.png", 2, 2)]}
 
 
 ## Résolution & affichage -------------------------------------
@@ -34,7 +38,8 @@ define config.end_game_transition = dissolve
 
 ## Sauvegarde -----------------------------------------------------
 
-# Dossier de sauvegarde unique au jeu (évite tout conflit avec un autre
+# Dossier de sauvegarde unique au jeu (nom conservé tel quel pour ne pas
+# perdre les sauvegardes existantes) (évite tout conflit avec un autre
 # jeu Ren'Py installé sur la même machine).
 define config.save_directory = "LeManoirLabyrinthe-1745201"
 
@@ -58,6 +63,9 @@ default preferences.text_cps = 40
 # Désactivé : une réponse est définitive, le joueur ne peut pas revenir
 # en arrière pour corriger une erreur. script.rpy appelle aussi
 # renpy.block_rollback() après chaque réponse, par sécurité.
+# Contre la triche par sauvegarde : le menu est bloqué pendant la mise et
+# l'énigme, et le manoir mémorise chaque verdict (persistent.verdicts) :
+# recharger une partie devant une porte déjà répondue rejoue le même verdict.
 define config.rollback_enabled = False
 define config.hard_rollback_limit = 0
 
@@ -72,12 +80,20 @@ define config.fadeout_audio = 1.5
 ## Build ------------------------------------------------------
 
 # Les originaux lourds (PNG non compressés) ne sont jamais livrés avec le jeu.
+# Le jeu n'utilise que des .jpg / .webp dans images/ : les ~65 Mo de .png
+# (sources IA, doublons, éléments non utilisés) restent dans le dépôt pour
+# le travail, mais ne partent plus dans le build (ni dans la démo web).
 init python:
     build.classify("assets_sources/**", None)
+    build.classify("outils/**", None)
+    build.classify("game/images/**.png", None)
     build.classify("**.bat", None)
     build.classify("**.py", None)
 
 
 ## Divers ------------------------------------------------------
 
-define config.developer = True  # passer à False avant la diffusion finale
+# "auto" : mode développeur (console, rechargement Maj+R) actif quand on lance
+# le jeu depuis le SDK, mais désactivé dans les builds distribués et la démo
+# web (sinon n'importe qui pourrait ouvrir la console et tricher).
+define config.developer = "auto"

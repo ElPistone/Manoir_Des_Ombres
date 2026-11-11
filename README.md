@@ -33,14 +33,26 @@ Direction artistique : nuit mystérieuse, manoir gothique, parchemin et encre do
 ## Mécanique de jeu
 
 - Le joueur commence avec **1 fragment de carte**, ramassé sous le tapis du hall d'entrée.
-- À chaque porte, il **mise un des fragments** qu'il possède, puis répond à une énigme à choix multiples (tirée au hasard, réponses mélangées, sans répétition tant que possible).
-  - **Bonne réponse** → il récupère son fragment **et** en gagne un nouveau.
-  - **Mauvaise réponse** → le fragment misé est englouti, mais la partie continue tant qu'il lui en reste.
-- **La difficulté suit le nombre de fragments** : avec 1 fragment, énigme de niveau 0 (très simple, car une erreur à ce moment fait perdre) ; avec 2, niveau 1 ; avec 3, niveau 2, la porte qui ferait gagner est la plus dure.
-- **Victoire** : réunir **4 fragments**.
-- **Défaite** : plus aucun fragment à miser, ou **10 portes** passées sans avoir complété la carte.
-- Pas de retour en arrière : une réponse donnée est définitive.
-- Un écran dédié (« la carte ») montre la carte se reconstituer au fil de la partie.
+- À chaque porte, il **mise un des fragments** qu'il possède, puis répond à une énigme (tirée au hasard, réponses mélangées, sans répétition tant que possible).
+  - **Bonne réponse** → il récupère son fragment **et** en gagne un nouveau (tiré au hasard parmi ceux qui manquent).
+  - **Mauvaise réponse** → le fragment misé est englouti, mais la partie continue tant qu'il lui en reste. La bonne réponse n'est pas révélée.
+- **Chaque fragment a un pouvoir**, actif tant qu'on le possède. Le fragment misé reste sous la porte : **son pouvoir ne joue pas pour cette énigme**. Choisir quoi miser est donc un vrai choix.
+
+  | Fragment | Pouvoir |
+  |---|---|
+  | Lanterne | La voix souffle un indice |
+  | Encre | Une mauvaise réponse est barrée (ou la première lettre révélée) |
+  | Sablier | Une fois par porte, on peut demander une autre énigme |
+  | Clé | Une fois par partie, une erreur ne coûte rien |
+
+- **Double mise** : avec 2 fragments, on peut tout risquer. L'énigme est plus dure, mais une bonne réponse rapporte 2 fragments d'un coup ; une erreur fait perdre les deux.
+- **La difficulté suit le nombre de fragments** : 1 fragment → niveau 0 (très simple, car une erreur fait perdre) ; 2 → niveau 1 ; 3 → niveau 2.
+- **Porte de sortie** : une fois la carte complète (4 fragments), il reste à franchir la sortie, gardée par une énigme à **réponse libre** au clavier (niveau 3). Une erreur coûte encore un fragment.
+- **Défaite** : plus aucun fragment à miser, ou **12 portes** passées sans être sorti.
+- Pas de retour en arrière : une réponse est définitive. Le menu est bloqué pendant la mise et l'énigme, et le manoir **mémorise chaque verdict** : recharger une sauvegarde devant une porte déjà répondue rejoue le même verdict.
+- **4 fins** : « La délivrance » (sortir sans aucune erreur), « L'aube » (sortir), « Les mains vides » et « Le dernier coup de minuit » (défaites). Les fins découvertes s'affichent sur l'écran titre.
+- **Histoire** : le dos de chaque fragment porte une note d'Edmund ou d'Éléonore Blackwood. On les relit dans l'écran de la carte.
+- Entre deux portes, le joueur traverse une pièce du manoir (grenier, cave, escalier, couloirs).
 
 ## Prérequis
 
@@ -61,20 +73,23 @@ Direction artistique : nuit mystérieuse, manoir gothique, parchemin et encre do
 le-manoir-des-ombres/
 ├── game/
 │   ├── images/
-│   │   ├── ui/            # boutons, cadres, icônes, curseur
+│   │   ├── ui/            # cadres, logo, icônes détourées (.webp)
 │   │   ├── backgrounds/    # fonds de chaque salle
-│   │   ├── riddles/        # illustrations d'énigmes
-│   │   └── map/            # carte complète + fragments découpés
-│   ├── audio/               # musiques et bruitages (à venir)
-│   ├── variables.rpy        # état global, portes et énigmes par niveau
+│   │   ├── riddles/        # illustrations d'énigmes (enigme_*.webp)
+│   │   └── map/            # fragments découpés
+│   ├── audio/               # musiques et bruitages (synthétisés)
+│   ├── fonts/               # Crimson Text et IM Fell English SC (licence OFL)
+│   ├── gui/                 # icône de fenêtre, curseur
+│   ├── variables.rpy        # règles, fragments et pouvoirs, énigmes, fins
 │   ├── positions_carte.rpy  # généré par decoupage_carte.py
 │   ├── script.rpy           # boucle de jeu, intro, fins
 │   ├── screens.rpy          # écrans : titre, dialogue, énigme, HUD, sauvegarde
 │   ├── ui_style.rpy         # palette, bascule interface dessinée/PNG, mise à l'échelle des fonds
-│   ├── textes.rpy           # banques de dialogues variés (ambiance, mise, victoire, défaite)
+│   ├── textes.rpy           # banques de dialogues variés et pièces traversées
+│   ├── effets.rpy           # transitions et animations
 │   └── options.rpy          # configuration du projet
 ├── decoupage_carte.py        # script Pillow : découpe la carte complète en fragments
-├── nettoyer_assets.py        # script Pillow : nettoie les images IA (damier, recadrage)
+├── outils/nettoyer_assets.py # script Pillow : nettoie les images IA (damier, recadrage)
 └── README.md
 ```
 
@@ -83,33 +98,39 @@ le-manoir-des-ombres/
 La direction artistique est produite par génération d'images IA, puis retravaillée par deux scripts Python :
 
 1. **`decoupage_carte.py`** — découpe `map_full.png` en 4 fragments (`piece_01.png` à `piece_04.png`) et génère `positions_carte.rpy`, utilisé par l'écran de reconstitution de la carte.
-2. **`nettoyer_assets.py`** — les générateurs d'images IA simulent souvent la transparence par un damier gris/blanc au lieu d'un vrai canal alpha, et regroupent parfois plusieurs états d'un bouton (normal/survolé) sur une seule image. Ce script détecte et retire le damier, recadre l'élément utile, et sépare les visuels assemblés. Les originaux sont sauvegardés avant modification.
+2. **`outils/nettoyer_assets.py`** — les générateurs d'images IA simulent souvent la transparence par un damier gris/blanc au lieu d'un vrai canal alpha, et regroupent parfois plusieurs états d'un bouton (normal/survolé) sur une seule image. Ce script détecte et retire le damier, recadre l'élément utile, et sépare les visuels assemblés. Les originaux sont sauvegardés avant modification.
 
-Les images livrées avec le jeu sont en JPEG compressé (environ 5 Mo au total). Les PNG originaux, beaucoup plus lourds, sont rangés dans `assets_sources/` (non versionné, jamais livré avec le jeu) ; `ranger_images.bat` les y déplace.
+Les images livrées avec le jeu sont en JPEG ou WebP compressé (environ 6 Mo au total). Les `.png` de `game/images/` (environ 65 Mo de sources IA et de doublons) sont **exclus du build** par `options.rpy` : ils ne partent ni dans les exports ni dans la démo web. Les originaux peuvent aussi être rangés dans `assets_sources/` (non versionné) ; `ranger_images.bat` les y déplace.
 
 ```bash
 pip install pillow
 python decoupage_carte.py
-python nettoyer_assets.py game/images/ui
+python outils/nettoyer_assets.py game/images/ui/cursor.png game/images/ui/icone.webp 96     # damier clair ou fond blanc
+python outils/nettoyer_assets.py --sombre SOURCE.png SORTIE.webp 96                            # damier noir/gris
+python outils/nettoyer_assets.py --fond SOURCE.png game/images/backgrounds/bg_x.jpg            # décor entouré de damier
 ```
 
 ## État actuel et limitations connues
 
-- **Interface dessinée par défaut** : `ui_style.rpy` a `gm_art_ui = False`, donc le jeu utilise des boutons et cadres unis générés par Ren'Py plutôt que les PNG de `images/ui/`. Passer cette variable à `True` une fois les images nettoyées via `nettoyer_assets.py`.
-- **Icônes non câblées** : `icon_map_piece.png` et `icon_score.png` ne sont pour l'instant pas utilisées dans le HUD ni les écrans de jeu (remplacées par des couleurs unies). `cursor.png` n'est pas encore défini comme curseur personnalisé dans `options.rpy`.
+- **Interface dessinée par défaut** : `ui_style.rpy` a `gm_art_ui = False`, donc le jeu utilise des boutons et cadres unis générés par Ren'Py plutôt que les PNG de `images/ui/`. Ces PNG contiennent encore un faux damier et ne sont pas livrés dans le build : il faut les nettoyer (`outils/nettoyer_assets.py`) et les enregistrer en `.webp` avant de passer cette variable à `True`.
+- **Carte en anglais** : le plan (« Manor of Blackwood ») est en anglais. C'est assumé dans l'histoire : il a été relevé par Edmund Blackwood, un cartographe anglais. Pour une carte en français, il faudrait régénérer `map_full.png` puis relancer `decoupage_carte.py`.
 - **Audio** : ambiances et bruitages sont fabriqués par synthèse (`python synthese_sons.py`, nécessite numpy et ffmpeg), donc libres de droits. Ils peuvent être remplacés par des enregistrements en gardant les mêmes noms de fichiers dans `game/audio/`.
+- **Mode développeur** : `config.developer = "auto"` ; la console n'est disponible que depuis le SDK, jamais dans les builds ni la démo web.
 
 ## Roadmap
 
-- [ ] Câbler `icon_map_piece.png`, `icon_score.png` et `cursor.png`
-- [ ] Basculer `gm_art_ui` sur `True` une fois les assets nettoyés
-- [ ] Mettre à jour `config.name` dans `options.rpy`
+- [x] Câbler les icônes (clé, fragment) et le curseur personnalisé
+- [x] Mettre à jour `config.name` dans `options.rpy`
 - [x] Intégrer musique d'ambiance et bruitages (portes, bonne/mauvaise réponse)
-- [ ] Finaliser l'ensemble des illustrations (fonds, icônes d'énigmes)
+- [x] Pouvoirs des fragments, double mise, porte de sortie, 4 fins
+- [x] Historique des dialogues et menu rapide
+- [ ] Basculer `gm_art_ui` sur `True` une fois les boutons PNG nettoyés
+- [ ] Finaliser l'ensemble des illustrations (fonds de porte, carte en français)
 
 ## Outils et crédits
 
 - Moteur de jeu : [Ren'Py](https://www.renpy.org/) (Python)
 - Traitement d'images : [Pillow](https://python-pillow.org/)
+- Polices : [Crimson Text](https://fonts.google.com/specimen/Crimson+Text) et [IM Fell English SC](https://fonts.google.com/specimen/IM+Fell+English+SC), sous licence SIL Open Font License (voir `game/fonts/`)
 - Direction artistique : génération d'images IA (prompts sur mesure, cf. documentation de production), retravaillées via scripts maison
 - Développement : Diaby Mamadou Dian

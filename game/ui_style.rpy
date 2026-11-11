@@ -1,5 +1,5 @@
 ########################################
-# LE MANOIR-LABYRINTHE — ui_style.rpy
+# LE MANOIR DES OMBRES — ui_style.rpy
 # Couleurs, mode d'interface et mise à l'échelle des fonds
 ########################################
 
@@ -9,12 +9,31 @@ define gm_gold_light = "#f4e4bc"
 define gm_bordeaux = "#3b1524"
 define gm_night = "#0d1524ee"
 define gm_parchemin = "#e8dcc0"
+define gm_parchemin_sombre = "#b8a988"
+define gm_encre = "#2b1d0e"
+
+## Polices (libres, licence OFL : voir fonts/OFL-*.txt) ---------------
+# Crimson Text pour la lecture, IM Fell English SC pour les titres et boutons
+define gm_police_titre = "fonts/IMFellEnglishSC.ttf"
+
+style default:
+    font "fonts/CrimsonText-Regular.ttf"
+
+# {b} et {i} utilisent les vraies variantes de la police, pas un faux gras
+init python:
+    config.font_replacement_map["fonts/CrimsonText-Regular.ttf", True, False] = ("fonts/CrimsonText-SemiBold.ttf", False, False)
+    config.font_replacement_map["fonts/CrimsonText-Regular.ttf", False, True] = ("fonts/CrimsonText-Italic.ttf", False, False)
+
+style gm_titre is default:
+    font "fonts/IMFellEnglishSC.ttf"
+    color "#e8dcc0"
 
 ## Mode d'interface -----------------------------------------------
 # False = boutons et cadres dessinés par Ren'Py (toujours propres)
 # True  = utilise les PNG de boutons et de cadres (à activer APRES les
-#         avoir nettoyés avec nettoyer_assets.py et remis dans images/ui/ ;
-#         les versions brutes sont rangées dans assets_sources/ui/)
+#         avoir nettoyés avec outils/nettoyer_assets.py, enregistrés en .webp,
+#         et après avoir adapté les chemins dans screens.rpy : les .png de
+#         images/ ne sont PAS livrés dans le build, voir options.rpy)
 define gm_art_ui = False
 
 ## Valeurs par défaut de la carte ---------------------------------
