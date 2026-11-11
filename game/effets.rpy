@@ -1,5 +1,5 @@
 ########################################
-# LE MANOIR-LABYRINTHE — effets.rpy
+# LE MANOIR DES OMBRES — effets.rpy
 # Transitions et animations (ATL) de l'interface
 ########################################
 
@@ -71,9 +71,9 @@ transform bouton_survol:
 ## Mise d'un fragment ---------------------------------------------------
 
 # Le fragment misé apparaît puis glisse sous la porte
-transform fragment_glisse:
+transform fragment_glisse(x=0.5):
     subpixel True
-    xalign 0.5
+    xalign x
     yalign 0.4
     zoom 0.5
     rotate -4
@@ -92,3 +92,13 @@ transform notif_apparait:
         easein 0.35 alpha 1.0 yoffset 0
     on hide:
         linear 0.5 alpha 0.0
+
+
+## Carte : fragments manquants ------------------------------------------
+
+# Un fragment encore perdu apparaît flou, sombre et sans couleur, comme
+# une zone de brouillard sur le plan
+transform fragment_brouille:
+    blur 14
+    matrixcolor SaturationMatrix(0.0) * BrightnessMatrix(-0.35)
+    alpha 0.55

@@ -1,5 +1,5 @@
 ########################################
-# LE MANOIR-LABYRINTHE — textes.rpy
+# LE MANOIR DES OMBRES — textes.rpy
 # Pools de dialogues/ambiance pour varier les textes d'une partie à l'autre
 ########################################
 
@@ -38,6 +38,36 @@ init python:
         "Vous avez l'impression, fugace, que les murs se sont légèrement déplacés.",
         "Un courant d'air porte une odeur de parchemin brûlé.",
     ]
+
+    # --- Pièces traversées entre deux portes (un fond + un texte tirés au hasard) ---
+    salles = [
+        {"bg": "bg_attic", "textes": [
+            "Un escalier étroit vous mène au grenier. Sous les draps, des meubles attendent un retour qui ne viendra pas.",
+            "Dans le grenier, un fauteuil à bascule oscille encore doucement. Personne ne s'y est assis depuis des années.",
+        ]},
+        {"bg": "bg_cellar", "textes": [
+            "La cave sent la terre humide et le vin tourné. Quelque chose a gratté les murs, de l'intérieur.",
+            "Entre les tonneaux de la cave, une bougie brûle sans jamais raccourcir.",
+        ]},
+        {"bg": "bg_stairs", "textes": [
+            "L'escalier en colimaçon tourne plus de fois qu'il ne devrait. Vous cessez de compter les marches.",
+            "Vous descendez l'escalier de pierre, et pourtant vous arrivez à l'étage du dessus.",
+        ]},
+        {"bg": "bg_corridor_02", "textes": [
+            "Dans le miroir du couloir, la pièce reflétée n'est pas tout à fait celle où vous vous tenez.",
+            "Le couloir s'allonge à chaque pas. Dans le miroir, une silhouette en robe noire disparaît dès que vous la regardez.",
+        ]},
+        {"bg": "bg_corridor_01", "textes": [
+            "Le silence du manoir n'est troublé que par le bruit de vos propres pas.",
+            "Une bougie s'éteint derrière vous, sans que rien ne l'ait soufflée.",
+        ]},
+    ]
+
+    def tirer_salle(derniere=None):
+        """Une pièce au hasard (différente de la précédente) et son texte."""
+        dispo = [s for s in salles if s["bg"] != derniere and renpy.has_image(s["bg"])] or salles
+        salle = renpy.random.choice(dispo)
+        return salle["bg"], renpy.random.choice(salle["textes"])
 
     def texte_aleatoire(liste):
         """Retourne une entrée aléatoire d'une des listes ci-dessus."""
