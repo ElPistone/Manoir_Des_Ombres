@@ -97,7 +97,6 @@ python nettoyer_assets.py game/images/ui
 
 - **Interface dessinée par défaut** : `ui_style.rpy` a `gm_art_ui = False`, donc le jeu utilise des boutons et cadres unis générés par Ren'Py plutôt que les PNG de `images/ui/`. Passer cette variable à `True` une fois les images nettoyées via `nettoyer_assets.py`.
 - **Icônes non câblées** : `icon_map_piece.png` et `icon_score.png` ne sont pour l'instant pas utilisées dans le HUD ni les écrans de jeu (remplacées par des couleurs unies). `cursor.png` n'est pas encore défini comme curseur personnalisé dans `options.rpy`.
-- **Nom du jeu** : `config.name` dans `options.rpy` affiche encore « Le Manoir-Labyrinthe » et doit être mis à jour en « Le Manoir des Ombres » pour correspondre au titre actuel.
 - **Audio** : ambiances et bruitages sont fabriqués par synthèse (`python synthese_sons.py`, nécessite numpy et ffmpeg), donc libres de droits. Ils peuvent être remplacés par des enregistrements en gardant les mêmes noms de fichiers dans `game/audio/`.
 
 ## Roadmap
