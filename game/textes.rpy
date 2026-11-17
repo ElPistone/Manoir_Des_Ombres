@@ -57,6 +57,10 @@ init python:
             "Dans le miroir du couloir, la pièce reflétée n'est pas tout à fait celle où vous vous tenez.",
             "Le couloir s'allonge à chaque pas. Dans le miroir, une silhouette en robe noire disparaît dès que vous la regardez.",
         ]},
+        {"bg": "bg_library", "textes": [
+            "Vous traversez la bibliothèque. Sur un pupitre, un cahier d'enfant est resté ouvert, l'encre encore humide.",
+            "Les rayonnages de la bibliothèque montent jusqu'au plafond. Un livre tombe derrière vous, puis un autre, comme pour vous indiquer le chemin.",
+        ]},
         {"bg": "bg_corridor_01", "textes": [
             "Le silence du manoir n'est troublé que par le bruit de vos propres pas.",
             "Une bougie s'éteint derrière vous, sans que rien ne l'ait soufflée.",
@@ -72,3 +76,41 @@ init python:
     def texte_aleatoire(liste):
         """Retourne une entrée aléatoire d'une des listes ci-dessus."""
         return renpy.random.choice(liste)
+
+    # --- La voix commente le fragment misé ---
+    voix_mise = {
+        "Lanterne": [
+            "« Ta Lanterne ? Alors tu chercheras dans le noir. »",
+            "« Sans ta Lanterne, je ne te soufflerai rien. Voyons ce que tu vaux. »",
+        ],
+        "Encre": [
+            "« L'Encre… Tu devras lire sans aide, cette fois. »",
+            "« Plus rien ne sera barré pour toi. Choisis bien. »",
+        ],
+        "Sablier": [
+            "« Tu me laisses ton Sablier. Le temps ne reviendra pas en arrière. »",
+            "« Pas de seconde chance, cette fois. Le sable est à moi. »",
+        ],
+        "Clé": [
+            "« La Clé ! Courageux… ou imprudent. Plus rien ne te pardonnera. »",
+            "« Sans ta Clé, une erreur te coûtera vraiment. Tu le sais ? »",
+        ],
+    }
+
+    # --- La voix réagit aux séries ---
+    voix_serie_ko = [
+        "« Deux fois de suite… Tu commences à me ressembler. »",
+        "« Tu trembles. Je l'entends à ta respiration. »",
+        "« Encore raté. Les murs, eux, ne se trompent jamais. »",
+    ]
+    voix_serie_ok = [
+        "« Tu réponds trop bien. Cela m'inquiète… et cela me plaît. »",
+        "« Personne n'était allé si vite depuis longtemps. »",
+        "« Tu lis les portes comme moi, autrefois. »",
+    ]
+
+    # --- Le choix de la porte qui murmure ---
+    voix_murmure = [
+        "« Tu as choisi de m'écouter. Alors cherche, dans cette pièce, ce dont je parle. »",
+        "La porte qui murmure s'entrouvre d'un doigt. La voix, tout contre le bois : « Ici, personne ne te proposera de réponse. »",
+    ]

@@ -46,13 +46,21 @@ Direction artistique : nuit mystérieuse, manoir gothique, parchemin et encre do
   | Clé | Une fois par partie, une erreur ne coûte rien |
 
 - **Double mise** : avec 2 fragments, on peut tout risquer. L'énigme est plus dure, mais une bonne réponse rapporte 2 fragments d'un coup ; une erreur fait perdre les deux.
+- **Deux portes par pièce** :
+  - **la porte de chêne** : une énigme à choix multiples ;
+  - **la porte qui murmure** : aucune réponse proposée. Le joueur **fouille la pièce** (il clique sur l'objet décrit, dans le décor) ou **tape la réponse** au clavier. Une bonne réponse rallume la bougie d'une porte et offre une page du journal d'Éléonore.
+- **Énigmes liées aux salles** : certaines énigmes parlent de la pièce traversée (grenier, cave, escalier, couloirs, hall, bibliothèque) et sont tirées en priorité quand on s'y trouve.
+- **La bougie** remplace le compteur de portes : elle éclaire **12 portes**. Sans la Lanterne, on peut **implorer un indice** à la voix, mais la bougie perd une porte.
 - **La difficulté suit le nombre de fragments** : 1 fragment → niveau 0 (très simple, car une erreur fait perdre) ; 2 → niveau 1 ; 3 → niveau 2.
-- **Porte de sortie** : une fois la carte complète (4 fragments), il reste à franchir la sortie, gardée par une énigme à **réponse libre** au clavier (niveau 3). Une erreur coûte encore un fragment.
-- **Défaite** : plus aucun fragment à miser, ou **12 portes** passées sans être sorti.
-- Pas de retour en arrière : une réponse est définitive. Le menu est bloqué pendant la mise et l'énigme, et le manoir **mémorise chaque verdict** : recharger une sauvegarde devant une porte déjà répondue rejoue le même verdict.
-- **4 fins** : « La délivrance » (sortir sans aucune erreur), « L'aube » (sortir), « Les mains vides » et « Le dernier coup de minuit » (défaites). Les fins découvertes s'affichent sur l'écran titre.
-- **Histoire** : le dos de chaque fragment porte une note d'Edmund ou d'Éléonore Blackwood. On les relit dans l'écran de la carte.
-- Entre deux portes, le joueur traverse une pièce du manoir (grenier, cave, escalier, couloirs).
+- **Porte de sortie** : une fois la carte complète (4 fragments), il reste à franchir la sortie, fermée par **deux verrous** : deux énigmes à **réponse libre** au clavier (niveau 3). Une erreur coûte encore un fragment.
+- **Défaite** : plus aucun fragment à miser, ou bougie éteinte.
+- Pas de retour en arrière : une réponse est définitive. Le menu est bloqué pendant le choix de la porte, la mise et l'énigme, et le manoir **mémorise chaque verdict** : recharger une sauvegarde devant une porte déjà répondue rejoue le même verdict.
+- **6 fins** : « La délivrance » (sortir sans aucune erreur), « L'aube » (sortir), une **fin secrète**, « Les mains vides », « Le gardien » (tout perdre après avoir tenu la carte complète) et « Le dernier coup de minuit » (bougie éteinte).
+- **Histoire** : le dos de chaque fragment porte une note d'Edmund ou d'Éléonore Blackwood. Les **8 pages du journal d'Éléonore** se ramassent au fil des parties et se gardent d'une partie à l'autre.
+- **Mémoire du manoir** : la voix reconnaît le joueur qui revient, se souvient de sa dernière fin, et commente ses mises et ses séries de réussites ou d'erreurs.
+- **Secrets du manoir** (écran titre) : fins découvertes avec une piste pour celles qui manquent, journal d'Éléonore, galerie des lieux visités.
+- **Accessibilité** (Réglages) : texte agrandi, mode sans flash ni secousse.
+- Entre deux portes, le joueur traverse une pièce du manoir (grenier, cave, escalier, couloirs, bibliothèque).
 
 ## Prérequis
 
@@ -124,6 +132,12 @@ python outils/nettoyer_assets.py --fond SOURCE.png game/images/backgrounds/bg_x.
 - [x] Intégrer musique d'ambiance et bruitages (portes, bonne/mauvaise réponse)
 - [x] Pouvoirs des fragments, double mise, porte de sortie, 4 fins
 - [x] Historique des dialogues et menu rapide
+- [x] Deux portes par pièce, fouilles dans le décor, bougie, indice imploré
+- [x] Sortie à deux verrous, 6 fins dont une secrète, journal d'Éléonore
+- [x] Écran « Secrets du manoir » (fins, journal, galerie) et accessibilité
+- [ ] Version anglaise
+- [ ] Page itch.io
+- [ ] Basculer `gm_art_ui` sur `True` une fois les boutons PNG nettoyés
 - [ ] Utiliser les boutons et cadres illustrés une fois les PNG nettoyés (en .webp)
 - [ ] Finaliser l'ensemble des illustrations (fonds de porte, carte en français)
 

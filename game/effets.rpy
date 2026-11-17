@@ -102,3 +102,28 @@ transform fragment_brouille:
     blur 14
     matrixcolor SaturationMatrix(0.0) * BrightnessMatrix(-0.35)
     alpha 0.55
+
+
+## Porte qui s'ouvre (bonne réponse) ------------------------------------
+
+# On avance dans la porte : le fond grossit et s'assombrit
+transform porte_s_ouvre:
+    subpixel True
+    align (0.5, 0.5)
+    zoom 1.0
+    easein 1.1 zoom 1.35 matrixcolor BrightnessMatrix(-0.6)
+
+
+## Bougie du HUD ----------------------------------------------------------
+
+# La flamme vacille doucement
+transform flamme_vacille:
+    subpixel True
+    xanchor 0.5
+    yanchor 1.0
+    block:
+        easein 0.35 xzoom 0.92 yzoom 1.06 alpha 0.92
+        easein 0.45 xzoom 1.04 yzoom 0.97 alpha 1.0
+        easein 0.3 xzoom 0.97 yzoom 1.02 alpha 0.96
+        repeat
+
