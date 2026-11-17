@@ -60,6 +60,7 @@ Direction artistique : nuit mystérieuse, manoir gothique, parchemin et encre do
 - **Mémoire du manoir** : la voix reconnaît le joueur qui revient, se souvient de sa dernière fin, et commente ses mises et ses séries de réussites ou d'erreurs.
 - **Secrets du manoir** (écran titre) : fins découvertes avec une piste pour celles qui manquent, journal d'Éléonore, galerie des lieux visités.
 - **Accessibilité** (Réglages) : texte agrandi, mode sans flash ni secousse.
+- **Deux langues** : français et anglais (bouton en haut à droite de l'écran titre, ou Réglages → Langue). Les traductions sont dans `game/traduction_en.rpy` ; les énigmes à jeu de mots ont été adaptées en anglais.
 - Entre deux portes, le joueur traverse une pièce du manoir (grenier, cave, escalier, couloirs, bibliothèque).
 
 ## Prérequis
@@ -135,7 +136,7 @@ python outils/nettoyer_assets.py --fond SOURCE.png game/images/backgrounds/bg_x.
 - [x] Deux portes par pièce, fouilles dans le décor, bougie, indice imploré
 - [x] Sortie à deux verrous, 6 fins dont une secrète, journal d'Éléonore
 - [x] Écran « Secrets du manoir » (fins, journal, galerie) et accessibilité
-- [ ] Version anglaise
+- [x] Version anglaise (bouton « English » sur l'écran titre, ou Réglages → Langue)
 - [ ] Page itch.io
 - [ ] Basculer `gm_art_ui` sur `True` une fois les boutons PNG nettoyés
 - [ ] Utiliser les boutons et cadres illustrés une fois les PNG nettoyés (en .webp)

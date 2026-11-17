@@ -402,6 +402,11 @@ init python:
 
     def reponses_admises(enigme):
         """Réponses acceptées au clavier, ou [] si l'énigme ne s'y prête pas."""
+        if persistent.langue == "en":
+            if enigme.get("answer") in ACCEPTE_EN:
+                return ACCEPTE_EN[enigme["answer"]]
+            mot = normaliser(T(enigme.get("answer", "")))
+            return [mot] if mot and " " not in mot else []
         if "accepte" in enigme:
             return enigme["accepte"]
         mot = normaliser(enigme.get("answer", ""))
@@ -454,7 +459,9 @@ init python:
 
     MOTS_VIDES = {"le", "la", "les", "l", "un", "une", "des", "du", "de", "d",
                   "ton", "ta", "tes", "mon", "ma", "mes", "votre", "vos",
-                  "son", "sa", "ses", "c", "est", "s", "il", "elle"}
+                  "son", "sa", "ses", "c", "est", "s", "il", "elle",
+                  # anglais
+                  "the", "a", "an", "your", "my", "his", "her", "its", "it", "is", "of"}
 
     def normaliser(texte):
         """Minuscules, sans accents, sans ponctuation ni articles."""
@@ -549,7 +556,7 @@ init python:
 
     def dit_le_nom(reponse):
         """Le joueur tape le nom de la voix à la porte de sortie."""
-        return normaliser(reponse or "") in ("eleonore", "eleonore blackwood")
+        return normaliser(reponse or "") in ("eleonore", "eleonore blackwood", "eleanor", "eleanor blackwood")
 
     # ------------------------------------------------------------------
     # ACCESSIBILITÉ

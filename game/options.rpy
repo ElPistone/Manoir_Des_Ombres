@@ -6,7 +6,7 @@
 ## Identité du jeu -------------------------------------------
 
 define config.name = _("Le Manoir des Ombres")
-define config.version = "1.2"
+define config.version = "1.3"
 define build.name = "LeManoirLabyrinthe"
 
 # Titre de la fenêtre (identique au nom du jeu)
