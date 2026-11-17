@@ -7,30 +7,25 @@
 ## COMPOSANTS RÉUTILISABLES
 ## ------------------------------------------------------------
 
-# Panneau : cadre doré + fond nuit (ou PNG si gm_art_ui = True)
+# Panneau : cadre doré + fond nuit.
+# (Les PNG de cadres et de boutons de images/ui/ ne sont pas livrés dans le
+# build : aucun écran ne doit y faire référence, même dans une branche « if »
+# inactive, car Ren'Py précharge aussi ces images et la version web plante.)
 screen gm_panel(pad=40, xa=0.5, ya=0.5):
-    if gm_art_ui:
+    frame:
+        at panneau_apparait
+        align (xa, ya)
+        background Solid(gm_gold)
+        padding (3, 3)
         frame:
-            at panneau_apparait
-            align (xa, ya)
-            background Frame("images/ui/frame_ui_generic.png", 80, 80)
+            background Solid(gm_night)
             padding (pad, pad)
             transclude
-    else:
-        frame:
-            at panneau_apparait
-            align (xa, ya)
-            background Solid(gm_gold)
-            padding (3, 3)
-            frame:
-                background Solid(gm_night)
-                padding (pad, pad)
-                transclude
 
 
-# Bouton : label, action, largeur, hauteur, taille du texte, image (mode PNG),
-# délai d'apparition (pour faire entrer les boutons l'un après l'autre).
-# Avec act=None, le bouton est inactif et apparaît grisé.
+# Bouton : label, action, largeur, hauteur, taille du texte, image (ignorée,
+# gardée pour compatibilité), délai d'apparition (pour faire entrer les
+# boutons l'un après l'autre). Avec act=None, le bouton est inactif et grisé.
 screen gm_bouton(label, act, w=420, h=80, fs=28, img="btn_start", d=0.0):
     frame:
         at bouton_apparait(d)
@@ -43,17 +38,14 @@ screen gm_bouton(label, act, w=420, h=80, fs=28, img="btn_start", d=0.0):
             action act
             activate_sound "audio/clic.ogg"
             padding (3, 3)
-            background (Frame("images/ui/" + img + ".png", 40, 40) if gm_art_ui else Solid(gm_gold if act is not None else "#6b5a35"))
-            hover_background (Frame("images/ui/" + img + "_hover.png", 40, 40) if gm_art_ui else Solid(gm_gold_light))
-            if gm_art_ui:
-                text label style "gm_titre" size fs color gm_parchemin hover_color gm_gold_light xalign 0.5 yalign 0.5
-            else:
-                frame:
-                    background Solid(gm_bordeaux if act is not None else "#24141b")
-                    xfill True
-                    yfill True
-                    padding (8, 0)
-                    text label style "gm_titre" size fs color (gm_parchemin if act is not None else "#7d7262") hover_color gm_gold_light xalign 0.5 yalign 0.5 text_align 0.5
+            background Solid(gm_gold if act is not None else "#6b5a35")
+            hover_background Solid(gm_gold_light)
+            frame:
+                background Solid(gm_bordeaux if act is not None else "#24141b")
+                xfill True
+                yfill True
+                padding (8, 0)
+                text label style "gm_titre" size fs color (gm_parchemin if act is not None else "#7d7262") hover_color gm_gold_light xalign 0.5 yalign 0.5 text_align 0.5
 
 
 ## ------------------------------------------------------------

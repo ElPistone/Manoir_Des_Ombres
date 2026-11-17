@@ -112,7 +112,7 @@ python outils/nettoyer_assets.py --fond SOURCE.png game/images/backgrounds/bg_x.
 
 ## État actuel et limitations connues
 
-- **Interface dessinée par défaut** : `ui_style.rpy` a `gm_art_ui = False`, donc le jeu utilise des boutons et cadres unis générés par Ren'Py plutôt que les PNG de `images/ui/`. Ces PNG contiennent encore un faux damier et ne sont pas livrés dans le build : il faut les nettoyer (`outils/nettoyer_assets.py`) et les enregistrer en `.webp` avant de passer cette variable à `True`.
+- **Interface dessinée** : le jeu utilise des boutons et cadres unis générés par Ren'Py plutôt que les PNG de `images/ui/`. Ces PNG contiennent encore un faux damier et ne sont pas livrés dans le build : aucun écran ne doit y faire référence (Ren'Py précharge les images de toutes les branches d'un écran, et la démo web plante sur un fichier absent). Pour les utiliser, les nettoyer (`outils/nettoyer_assets.py`), les enregistrer en `.webp`, puis adapter `gm_panel` et `gm_bouton` dans `screens.rpy`.
 - **Carte en anglais** : le plan (« Manor of Blackwood ») est en anglais. C'est assumé dans l'histoire : il a été relevé par Edmund Blackwood, un cartographe anglais. Pour une carte en français, il faudrait régénérer `map_full.png` puis relancer `decoupage_carte.py`.
 - **Audio** : ambiances et bruitages sont fabriqués par synthèse (`python synthese_sons.py`, nécessite numpy et ffmpeg), donc libres de droits. Ils peuvent être remplacés par des enregistrements en gardant les mêmes noms de fichiers dans `game/audio/`.
 - **Mode développeur** : `config.developer = "auto"` ; la console n'est disponible que depuis le SDK, jamais dans les builds ni la démo web.
@@ -124,7 +124,7 @@ python outils/nettoyer_assets.py --fond SOURCE.png game/images/backgrounds/bg_x.
 - [x] Intégrer musique d'ambiance et bruitages (portes, bonne/mauvaise réponse)
 - [x] Pouvoirs des fragments, double mise, porte de sortie, 4 fins
 - [x] Historique des dialogues et menu rapide
-- [ ] Basculer `gm_art_ui` sur `True` une fois les boutons PNG nettoyés
+- [ ] Utiliser les boutons et cadres illustrés une fois les PNG nettoyés (en .webp)
 - [ ] Finaliser l'ensemble des illustrations (fonds de porte, carte en français)
 
 ## Outils et crédits

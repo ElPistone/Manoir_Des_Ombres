@@ -28,13 +28,12 @@ style gm_titre is default:
     font "fonts/IMFellEnglishSC.ttf"
     color "#e8dcc0"
 
-## Mode d'interface -----------------------------------------------
-# False = boutons et cadres dessinés par Ren'Py (toujours propres)
-# True  = utilise les PNG de boutons et de cadres (à activer APRES les
-#         avoir nettoyés avec outils/nettoyer_assets.py, enregistrés en .webp,
-#         et après avoir adapté les chemins dans screens.rpy : les .png de
-#         images/ ne sont PAS livrés dans le build, voir options.rpy)
-define gm_art_ui = False
+## Interface ---------------------------------------------------------
+# Boutons et cadres sont dessinés par Ren'Py (screens.rpy). Les PNG bruts de
+# images/ui/ (boutons, cadres) contiennent un faux damier et ne sont pas
+# livrés dans le build. Pour les utiliser un jour : les nettoyer avec
+# outils/nettoyer_assets.py, les enregistrer en .webp, puis modifier
+# gm_panel et gm_bouton dans screens.rpy.
 
 ## Valeurs par défaut de la carte ---------------------------------
 # positions_carte.rpy (généré par decoupage_carte.py) écrasera ces valeurs.
