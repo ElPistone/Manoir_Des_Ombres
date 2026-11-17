@@ -71,11 +71,11 @@ init python:
         """Une pièce au hasard (différente de la précédente) et son texte."""
         dispo = [s for s in salles if s["bg"] != derniere and renpy.has_image(s["bg"])] or salles
         salle = renpy.random.choice(dispo)
-        return salle["bg"], renpy.random.choice(salle["textes"])
+        return salle["bg"], T(renpy.random.choice(salle["textes"]))
 
     def texte_aleatoire(liste):
         """Retourne une entrée aléatoire d'une des listes ci-dessus."""
-        return renpy.random.choice(liste)
+        return T(renpy.random.choice(liste))
 
     # --- La voix commente le fragment misé ---
     voix_mise = {

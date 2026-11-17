@@ -85,7 +85,7 @@ label start:
     $ serie_ko = 0
     $ id_partie = "%08x" % renpy.random.getrandbits(32)
 
-    $ lore_depart = fragments["piece_01"]["lore"]
+    $ lore_depart = T(fragments["piece_01"]["lore"])
     narrateur "Au dos, quelques lignes d'une écriture fine : [lore_depart]"
 
     show screen hud_jeu
@@ -98,7 +98,7 @@ label start:
             narrateur "Une voix de femme s'élève des murs : « Encore toi. La dernière fois, tu es resté avec moi. Tu t'en souviens ? »"
         else:
             narrateur "Une voix de femme s'élève des murs : « Je reconnais ton pas. Tu es déjà venu ici. »"
-        $ texte_visite = "« C'est ta %de visite. Les murs se souviennent de toi, et moi aussi. »" % persistent.parties
+        $ texte_visite = T("« C'est ta %de visite. Les murs se souviennent de toi, et moi aussi. »") % persistent.parties
         narrateur "[texte_visite]"
         narrateur "« Les règles n'ont pas changé. Il te faut [total_pieces] morceaux pour retrouver ton chemin. »"
     else:
@@ -118,9 +118,9 @@ label trouver_une_page(intro=""):
     if num_page is None:
         return
     play sound "audio/parchemin.ogg"
-    $ texte_page = "%s Une page du journal d'Éléonore (%d/%d)." % (intro, num_page, len(pages_journal))
+    $ texte_page = T("%s Une page du journal d'Éléonore (%d/%d).") % (T(intro), num_page, len(pages_journal))
     narrateur "[texte_page]"
-    $ texte_page = "« %s »" % pages_journal[num_page - 1]
+    $ texte_page = T("« %s »") % T(pages_journal[num_page - 1])
     narrateur "[texte_page]"
     if journal_complet():
         narrateur "Le journal est complet. Une phrase, sur la dernière page, semble écrite pour vous."
@@ -307,10 +307,10 @@ label resolution:
         $ i_gain = 0
         while i_gain < len(gagnes):
             $ _p = gagnes[i_gain]
-            $ renpy.notify("%s (%d/%d)" % (fragments[_p]["nom"], len(pieces_owned), total_pieces))
-            $ texte_gain = "Vous gagnez le %s. %s" % (fragments[_p]["nom"], fragments[_p]["effet"])
+            $ renpy.notify("%s (%d/%d)" % (T(fragments[_p]["nom"]), len(pieces_owned), total_pieces))
+            $ texte_gain = T("Vous gagnez le %s. %s") % (T(fragments[_p]["nom"]), T(fragments[_p]["effet"]))
             narrateur "[texte_gain]"
-            $ texte_lore = fragments[_p]["lore"]
+            $ texte_lore = T(fragments[_p]["lore"])
             narrateur "Au dos, quelques lignes d'une écriture fine : [texte_lore]"
             $ i_gain += 1
 
@@ -356,11 +356,11 @@ label resolution:
     # Petit bilan avant la porte suivante
     if pieces_owned and portes_restantes() > 0:
         $ restantes = portes_restantes()
-        $ texte_restantes = "Votre bougie n'éclairera plus qu'une porte." if restantes == 1 else "Votre bougie peut encore éclairer %d portes." % restantes
+        $ texte_restantes = T("Votre bougie n'éclairera plus qu'une porte.") if restantes == 1 else T("Votre bougie peut encore éclairer %d portes.") % restantes
         if len(pieces_owned) >= total_pieces:
-            $ bilan = "La carte est complète ! Il ne reste qu'à trouver la porte de sortie. %s" % texte_restantes
+            $ bilan = T("La carte est complète ! Il ne reste qu'à trouver la porte de sortie. %s") % texte_restantes
         else:
-            $ bilan = "Morceaux de carte : %d/%d. %s" % (len(pieces_owned), total_pieces, texte_restantes)
+            $ bilan = T("Morceaux de carte : %d/%d. %s") % (len(pieces_owned), total_pieces, texte_restantes)
         narrateur "[bilan]"
 
     jump door_loop
@@ -389,7 +389,7 @@ label victory:
         narrateur "Au loin, une voix appelle encore, très bas : « Emmène-moi… » Mais la porte s'est déjà refermée. Fin : « L'aube »."
         narrateur "(Peut-être existe-t-il une autre fin, pour qui ne se tromperait jamais…)"
 
-    $ texte_score = "Sortie trouvée en %d portes, avec %d erreur%s." % (manche, erreurs, "s" if erreurs > 1 else "")
+    $ texte_score = (T("Sortie trouvée en %d portes, avec %d erreurs.") if erreurs > 1 else T("Sortie trouvée en %d portes, avec %d erreur.")) % (manche, erreurs)
     narrateur "[texte_score]"
     return
 
@@ -425,19 +425,19 @@ label defeat:
         narrateur "« Tu étais si près », murmure la voix. « Moi aussi, autrefois. »"
         narrateur "Une main froide se pose sur la vôtre, puis s'en va. Des pas légers s'éloignent vers l'entrée, et la grande porte s'ouvre… pour quelqu'un d'autre."
         narrateur "Désormais, c'est votre voix qui résonne dans les murs. Vous attendez le prochain voyageur."
-        $ nom_fin = "Le gardien"
+        $ nom_fin = T("Le gardien")
     elif not pieces_owned:
         $ debloquer_fin("mains_vides")
         narrateur "Vos mains sont vides. Il ne vous reste plus rien à offrir au manoir."
         narrateur "« Ne t'inquiète pas », dit la voix, presque tendre. « On s'habitue. Moi, je me suis habituée. »"
-        $ nom_fin = "Les mains vides"
+        $ nom_fin = T("Les mains vides")
     else:
         $ debloquer_fin("minuit")
         narrateur "Votre bougie n'est plus qu'une flaque de cire. Quelque part, une horloge sonne le dernier coup de minuit, et votre carte ne vous mènera nulle part."
-        $ nom_fin = "Le dernier coup de minuit"
+        $ nom_fin = T("Le dernier coup de minuit")
     narrateur "Autour de vous, les couloirs se referment un à un, non pas dans un vacarme de pierre, mais dans un silence total, presque poli."
     play sound "audio/bougie_souffle.ogg"
     narrateur "La dernière chose que vous voyez est la lumière de votre bougie, qui vacille, puis s'éteint. Fin : « [nom_fin] »."
-    $ texte_score = "Morceaux réunis : %d/%d." % (len(pieces_owned), total_pieces)
+    $ texte_score = T("Morceaux réunis : %d/%d.") % (len(pieces_owned), total_pieces)
     narrateur "[texte_score]"
     return

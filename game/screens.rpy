@@ -109,11 +109,11 @@ screen quick_menu():
             yalign 0.975
             spacing 0
 
-            textbutton "Historique" action ShowMenu("history")
-            textbutton "Sauvegarder" action ShowMenu("save")
-            textbutton "Charger" action ShowMenu("load")
-            textbutton "Réglages" action ShowMenu("preferences")
-            textbutton "Menu" action MainMenu()
+            textbutton T("Historique") action ShowMenu("history")
+            textbutton T("Sauvegarder") action ShowMenu("save")
+            textbutton T("Charger") action ShowMenu("load")
+            textbutton T("Réglages") action ShowMenu("preferences")
+            textbutton T("Menu") action MainMenu()
 
 
 ## ------------------------------------------------------------
@@ -137,13 +137,13 @@ screen choix_piece(pieces, double_possible=False, sortie=False):
             xsize 1160
 
             if sortie:
-                text "Quel morceau risquez-vous à la porte de sortie ?" style "gm_titre" size 38 xalign 0.5
+                text T("Quel morceau risquez-vous à la porte de sortie ?") style "gm_titre" size 38 xalign 0.5
             elif mode_double:
-                text "Choisissez les deux morceaux à miser" style "gm_titre" size 38 xalign 0.5
+                text T("Choisissez les deux morceaux à miser") style "gm_titre" size 38 xalign 0.5
             else:
-                text "Quel morceau de carte allez-vous miser ?" style "gm_titre" size 38 xalign 0.5
+                text T("Quel morceau de carte allez-vous miser ?") style "gm_titre" size 38 xalign 0.5
 
-            text "Le morceau misé reste sous la porte : son pouvoir ne vous aidera pas pour cette énigme." size 25 color gm_parchemin_sombre xalign 0.5 text_align 0.5
+            text T("Le morceau misé reste sous la porte : son pouvoir ne vous aidera pas pour cette énigme.") size 25 color gm_parchemin_sombre xalign 0.5 text_align 0.5
 
             hbox:
                 xalign 0.5
@@ -174,11 +174,11 @@ screen choix_piece(pieces, double_possible=False, sortie=False):
                                     spacing 8
                                     xfill True
                                     add Transform("images/map/" + piece + ".jpg", xysize=(234, 150), fit="cover") xalign 0.5
-                                    text frag["nom"] style "gm_titre" size 23 color gm_gold xalign 0.5 text_align 0.5
+                                    text T(frag["nom"]) style "gm_titre" size 23 color gm_gold xalign 0.5 text_align 0.5
                                     if piece == "piece_04" and cle_utilisee:
-                                        text "Pouvoir déjà utilisé." size 21 color "#8a7f6a" xalign 0.5 text_align 0.5
+                                        text T("Pouvoir déjà utilisé.") size 21 color "#8a7f6a" xalign 0.5 text_align 0.5
                                     else:
-                                        text frag["effet"] size 21 color gm_parchemin xalign 0.5 text_align 0.5
+                                        text T(frag["effet"]) size 21 color gm_parchemin xalign 0.5 text_align 0.5
 
             if double_possible:
                 vbox:
@@ -188,11 +188,11 @@ screen choix_piece(pieces, double_possible=False, sortie=False):
                         xalign 0.5
                         spacing 30
                         if mode_double:
-                            use gm_bouton("Valider la double mise", (Return(list(selection)) if len(selection) == 2 else None), 460, 70, 27, d=0.0)
-                            use gm_bouton("Annuler", [SetScreenVariable("mode_double", False), SetScreenVariable("selection", [])], 240, 70, 27, d=0.0)
+                            use gm_bouton(T("Valider la double mise"), (Return(list(selection)) if len(selection) == 2 else None), 460, 70, 27, d=0.0)
+                            use gm_bouton(T("Annuler"), [SetScreenVariable("mode_double", False), SetScreenVariable("selection", [])], 240, 70, 27, d=0.0)
                         else:
-                            use gm_bouton("Tout risquer : miser les deux", SetScreenVariable("mode_double", True), 520, 70, 27, d=0.4)
-                    text "Double mise : énigme plus difficile, mais deux morceaux gagnés si vous répondez juste. Une erreur vous coûte les deux." size 22 color gm_parchemin_sombre xalign 0.5 text_align 0.5 xsize 1000
+                            use gm_bouton(T("Tout risquer : miser les deux"), SetScreenVariable("mode_double", True), 520, 70, 27, d=0.4)
+                    text T("Double mise : énigme plus difficile, mais deux morceaux gagnés si vous répondez juste. Une erreur vous coûte les deux.") size 22 color gm_parchemin_sombre xalign 0.5 text_align 0.5 xsize 1000
 
 
 # --- Énigme : à choix multiples (2 réponses par ligne) ou à réponse libre ---
@@ -216,16 +216,16 @@ screen menu_enigme(enigme, choix, actifs=[], barree=None, sablier_dispo=False, i
                 spacing 28
                 xsize (960 if enigme.get("illus") else 1080)
 
-                text enigme["riddle"] color gm_parchemin size tx(36) xalign 0.5 text_align 0.5 xfill True
+                text T(enigme["riddle"]) color gm_parchemin size tx(36) xalign 0.5 text_align 0.5 xfill True
 
                 # Pouvoir de la Lanterne (ou indice imploré) : un indice
                 if indice_dispo:
-                    text ("{i}" + ("Lanterne : " if "Lanterne" in actifs else "La voix : ") + enigme["indice"] + "{/i}") size tx(26) color gm_gold_light xalign 0.5 text_align 0.5 xfill True
+                    text ("{i}" + (T("Lanterne : ") if "Lanterne" in actifs else T("La voix : ")) + T(enigme["indice"]) + "{/i}") size tx(26) color gm_gold_light xalign 0.5 text_align 0.5 xfill True
 
                 if enigme.get("saisie"):
                     # Pouvoir de l'Encre : la première lettre
                     if "Encre" in actifs:
-                        text ("{i}Encre : la réponse commence par « " + premiere_lettre(enigme) + " ».{/i}") size tx(26) color gm_gold_light xalign 0.5 text_align 0.5
+                        text ("{i}" + (T("Encre : la réponse commence par « %s ».") % premiere_lettre(enigme)) + "{/i}") size tx(26) color gm_gold_light xalign 0.5 text_align 0.5
 
                     frame:
                         xalign 0.5
@@ -244,10 +244,10 @@ screen menu_enigme(enigme, choix, actifs=[], barree=None, sablier_dispo=False, i
                                 color gm_parchemin
                                 xalign 0.5
 
-                    text "Tapez votre réponse puis appuyez sur Entrée." size 22 color gm_parchemin_sombre xalign 0.5
+                    text T("Tapez votre réponse puis appuyez sur Entrée.") size 22 color gm_parchemin_sombre xalign 0.5
                     hbox:
                         xalign 0.5
-                        use gm_bouton("Répondre", (Return(reponse) if reponse.strip() else None), 320, 70, 28, d=0.3)
+                        use gm_bouton(T("Répondre"), (Return(reponse) if reponse.strip() else None), 320, 70, 28, d=0.3)
 
                 else:
                     hbox:
@@ -260,9 +260,9 @@ screen menu_enigme(enigme, choix, actifs=[], barree=None, sablier_dispo=False, i
                         for i, option in enumerate(choix):
                             # Pouvoir de l'Encre : une mauvaise réponse barrée
                             if option == barree:
-                                use gm_bouton("{s}" + option + "{/s}", None, (455 if enigme.get("illus") else 490), 90, tx(27), "frame_dialogue", d=0.25 + i * 0.1)
+                                use gm_bouton("{s}" + T(option) + "{/s}", None, (455 if enigme.get("illus") else 490), 90, tx(27), "frame_dialogue", d=0.25 + i * 0.1)
                             else:
-                                use gm_bouton(option, Return(option), (455 if enigme.get("illus") else 490), 90, tx(27), "frame_dialogue", d=0.25 + i * 0.1)
+                                use gm_bouton(T(option), Return(option), (455 if enigme.get("illus") else 490), 90, tx(27), "frame_dialogue", d=0.25 + i * 0.1)
 
                 use actions_enigme(sablier_dispo, implorer_dispo)
 
@@ -275,7 +275,7 @@ screen actions_enigme(sablier_dispo, implorer_dispo):
             spacing 50
             # Pouvoir du Sablier : une autre énigme, une fois par porte
             if sablier_dispo:
-                textbutton "Retourner le sablier (autre énigme)":
+                textbutton T("Retourner le sablier (autre énigme)"):
                     action Return("__sablier__")
                     text_style "gm_titre"
                     text_size tx(25)
@@ -283,7 +283,7 @@ screen actions_enigme(sablier_dispo, implorer_dispo):
                     text_hover_color gm_gold_light
             # Sans la Lanterne, on peut implorer un indice contre une porte de bougie
             if implorer_dispo:
-                textbutton "Implorer un indice (la bougie raccourcit)":
+                textbutton T("Implorer un indice (la bougie raccourcit)"):
                     action Return("__implorer__")
                     text_style "gm_titre"
                     text_size tx(25)
@@ -309,7 +309,7 @@ screen choix_porte(salle, restantes):
             spacing 26
             xsize 1160
 
-            text "Deux portes se font face. Laquelle ouvrez-vous ?" style "gm_titre" size tx(38) xalign 0.5 text_align 0.5
+            text T("Deux portes se font face. Laquelle ouvrez-vous ?") style "gm_titre" size tx(38) xalign 0.5 text_align 0.5
 
             hbox:
                 xalign 0.5
@@ -337,10 +337,15 @@ screen choix_porte(salle, restantes):
                                 vbox:
                                     spacing 14
                                     xfill True
-                                    text titre style "gm_titre" size tx(32) color gm_gold xalign 0.5
-                                    text texte size tx(23) color gm_parchemin xalign 0.5 text_align 0.5
+                                    text T(titre) style "gm_titre" size tx(32) color gm_gold xalign 0.5
+                                    text T(texte) size tx(23) color gm_parchemin xalign 0.5 text_align 0.5
 
-            $ texte_bougie = ("Votre bougie peut encore éclairer %d porte%s après celle-ci." % (restantes, "s" if restantes > 1 else "")) if restantes > 0 else "Votre bougie vit sa dernière porte."
+            if restantes > 1:
+                $ texte_bougie = T("Votre bougie peut encore éclairer %d portes après celle-ci.") % restantes
+            elif restantes == 1:
+                $ texte_bougie = T("Votre bougie peut encore éclairer une porte après celle-ci.")
+            else:
+                $ texte_bougie = T("Votre bougie vit sa dernière porte.")
             text texte_bougie size tx(23) color gm_parchemin_sombre xalign 0.5
 
 
@@ -386,10 +391,10 @@ screen fouille_salle(enigme, barree=None, indice_dispo=False, sablier_dispo=Fals
             padding (30, 18)
             vbox:
                 spacing 10
-                text enigme["riddle"] color gm_parchemin size tx(30) xalign 0.5 text_align 0.5
+                text T(enigme["riddle"]) color gm_parchemin size tx(30) xalign 0.5 text_align 0.5
                 if indice_dispo:
-                    text ("{i}Indice : " + enigme["indice"] + "{/i}") size tx(24) color gm_gold_light xalign 0.5 text_align 0.5
-                text "Cliquez sur l'objet, dans la pièce." size tx(21) color gm_parchemin_sombre xalign 0.5
+                    text ("{i}" + T("Indice : ") + T(enigme["indice"]) + "{/i}") size tx(24) color gm_gold_light xalign 0.5 text_align 0.5
+                text T("Cliquez sur l'objet, dans la pièce.") size tx(21) color gm_parchemin_sombre xalign 0.5
                 use actions_enigme(sablier_dispo, implorer_dispo)
 
     # Nom de l'objet survolé
@@ -400,7 +405,7 @@ screen fouille_salle(enigme, barree=None, indice_dispo=False, sablier_dispo=Fals
             yalign 0.97
             background Solid("#0d1524dd")
             padding (24, 8)
-            text survol.capitalize() style "gm_titre" size tx(30) color gm_gold_light
+            text T(survol).capitalize() style "gm_titre" size tx(30) color gm_gold_light
 
 
 # --- HUD (haut droite) : porte en cours, carte, pouvoirs ---
@@ -424,7 +429,7 @@ screen hud_jeu():
                 hbox:
                     spacing 10
                     add "images/ui/icone_cle.webp" zoom 0.42 yalign 0.5
-                    text ("Porte %d" % max(manche, 1)) style "gm_titre" size 28 color gm_gold yalign 0.5
+                    text (T("Porte %d") % max(manche, 1)) style "gm_titre" size 28 color gm_gold yalign 0.5
 
             # La bougie : sa cire fond au fil des portes
             $ restantes_hud = portes_restantes()
@@ -441,7 +446,7 @@ screen hud_jeu():
                         add Solid("#e8dcc0") xysize (12, cire) xalign 0.5 yalign 1.0
                         if restantes_hud > 0:
                             add Transform("images/ui/flamme.webp", zoom=0.2) at flamme_vacille xpos 17 ypos (48 - cire)
-                    text ("Bougie : %d" % restantes_hud) style "gm_titre" size 28 color (gm_gold if restantes_hud > 2 else "#d0584a") yalign 0.5
+                    text (T("Bougie : %d") % restantes_hud) style "gm_titre" size 28 color (gm_gold if restantes_hud > 2 else "#d0584a") yalign 0.5
 
             button:
                 background Solid("#0d1524dd")
@@ -451,14 +456,14 @@ screen hud_jeu():
                 hbox:
                     spacing 10
                     add "images/ui/icone_carte.webp" zoom 0.5 yalign 0.5
-                    text ("Carte %d/%d" % (len(pieces_owned), total_pieces)) style "gm_titre" size 28 color gm_gold hover_color gm_gold_light yalign 0.5
+                    text (T("Carte %d/%d") % (len(pieces_owned), total_pieces)) style "gm_titre" size 28 color gm_gold hover_color gm_gold_light yalign 0.5
 
         if pieces_owned:
             frame:
                 xalign 1.0
                 background Solid("#0d1524bb")
                 padding (14, 4)
-                text ("Pouvoirs : " + ", ".join(fragments[p]["pouvoir"] for p in sorted(pieces_owned) if not (p == "piece_04" and cle_utilisee))) size 22 color gm_parchemin
+                text (T("Pouvoirs : ") + ", ".join(T(fragments[p]["pouvoir"]) for p in sorted(pieces_owned) if not (p == "piece_04" and cle_utilisee))) size 22 color gm_parchemin
 
 
 # --- Carte en cours de reconstitution, et notes au dos des fragments ---
@@ -472,7 +477,7 @@ screen carte_puzzle():
         vbox:
             spacing 22
 
-            text "Le plan du manoir Blackwood" style "gm_titre" size 38 xalign 0.5
+            text T("Le plan du manoir Blackwood") style "gm_titre" size 38 xalign 0.5
 
             hbox:
                 spacing 40
@@ -493,16 +498,16 @@ screen carte_puzzle():
                 vbox:
                     xsize 560
                     spacing 16
-                    text "Notes au dos des fragments" style "gm_titre" size 28 color gm_gold
+                    text T("Notes au dos des fragments") style "gm_titre" size 28 color gm_gold
                     for pid in sorted(pieces_owned):
                         vbox:
                             spacing 2
-                            text fragments[pid]["nom"] style "gm_titre" size 23 color gm_gold_light
-                            text fragments[pid]["lore"] italic True size 22 color gm_parchemin
+                            text T(fragments[pid]["nom"]) style "gm_titre" size 23 color gm_gold_light
+                            text T(fragments[pid]["lore"]) italic True size 22 color gm_parchemin
                     if len(pieces_owned) < total_pieces:
-                        text "D'autres notes attendent sur les morceaux perdus…" italic True size 21 color "#8a7f6a"
+                        text T("D'autres notes attendent sur les morceaux perdus…") italic True size 21 color "#8a7f6a"
 
-            textbutton "Fermer" action Hide("carte_puzzle") xalign 0.5 text_style "gm_titre" text_color gm_gold text_hover_color gm_gold_light text_size 28
+            textbutton T("Fermer") action Hide("carte_puzzle") xalign 0.5 text_style "gm_titre" text_color gm_gold text_hover_color gm_gold_light text_size 28
 
 
 ## ------------------------------------------------------------
@@ -521,11 +526,20 @@ screen main_menu():
         ypos 560
         spacing 14
 
-        use gm_bouton("Commencer", Start(), 420, 80, 32, "btn_start", d=0.4)
-        use gm_bouton("Charger", ShowMenu("load"), 420, 80, 32, "btn_load", d=0.55)
-        use gm_bouton("Secrets du manoir", ShowMenu("secrets"), 420, 80, 30, "btn_load", d=0.7)
-        use gm_bouton("Réglages", ShowMenu("preferences"), 420, 80, 32, "btn_load", d=0.85)
-        use gm_bouton("Quitter", Quit(confirm=True), 420, 80, 32, "btn_quit", d=1.0)
+        use gm_bouton(T("Commencer"), Start(), 420, 80, 32, "btn_start", d=0.4)
+        use gm_bouton(T("Charger"), ShowMenu("load"), 420, 80, 32, "btn_load", d=0.55)
+        use gm_bouton(T("Secrets du manoir"), ShowMenu("secrets"), 420, 80, 30, "btn_load", d=0.7)
+        use gm_bouton(T("Réglages"), ShowMenu("preferences"), 420, 80, 32, "btn_load", d=0.85)
+        use gm_bouton(T("Quitter"), Quit(confirm=True), 420, 80, 32, "btn_quit", d=1.0)
+
+    # Choix de la langue (en haut à droite)
+    textbutton ("English" if persistent.langue == "fr" else "Français"):
+        action SetField(persistent, "langue", "en" if persistent.langue == "fr" else "fr")
+        align (0.98, 0.03)
+        text_style "gm_titre"
+        text_size 30
+        text_color gm_gold
+        text_hover_color gm_gold_light
 
     # Ce que le joueur a découvert (gardé d'une partie à l'autre)
     frame:
@@ -536,8 +550,8 @@ screen main_menu():
         padding (20, 12)
         vbox:
             spacing 4
-            text ("Fins découvertes : %d/%d" % (len([f for f in fins if f[0] in persistent.fins_vues]), len(fins))) style "gm_titre" size 26 color gm_gold
-            text ("Journal d'Éléonore : %d/%d pages" % (len(persistent.pages_journal), len(pages_journal))) style "gm_titre" size 26 color gm_gold
+            text (T("Fins découvertes : %d/%d") % (len([f for f in fins if f[0] in persistent.fins_vues]), len(fins))) style "gm_titre" size 26 color gm_gold
+            text (T("Journal d'Éléonore : %d/%d pages") % (len(persistent.pages_journal), len(pages_journal))) style "gm_titre" size 26 color gm_gold
 
 
 ## ------------------------------------------------------------
@@ -560,7 +574,7 @@ screen secrets():
     default onglet = "fins"
     default agrandi = None
 
-    use game_menu(_("Secrets du manoir")):
+    use game_menu(T("Secrets du manoir")):
         vbox:
             spacing 20
             xsize 1400
@@ -569,9 +583,9 @@ screen secrets():
                 style_prefix "gm_nav"
                 xalign 0.5
                 spacing 50
-                textbutton "Fins" action SetScreenVariable("onglet", "fins")
-                textbutton "Journal d'Éléonore" action SetScreenVariable("onglet", "journal")
-                textbutton "Galerie" action SetScreenVariable("onglet", "galerie")
+                textbutton T("Fins") action SetScreenVariable("onglet", "fins")
+                textbutton T("Journal d'Éléonore") action SetScreenVariable("onglet", "journal")
+                textbutton T("Galerie") action SetScreenVariable("onglet", "galerie")
 
             viewport:
                 xysize (1400, 600)
@@ -587,11 +601,11 @@ screen secrets():
                             vbox:
                                 spacing 2
                                 if code in persistent.fins_vues:
-                                    text ("« " + nom + " »") style "gm_titre" size tx(30) color gm_gold
-                                    text piste size tx(23) color gm_parchemin
+                                    text (T("« %s »") % T(nom)) style "gm_titre" size tx(30) color gm_gold
+                                    text T(piste) size tx(23) color gm_parchemin
                                 else:
-                                    text "« ??? »" style "gm_titre" size tx(30) color "#6b6456"
-                                    text ("Piste : " + piste) italic True size tx(23) color gm_parchemin_sombre
+                                    text T("« ??? »") style "gm_titre" size tx(30) color "#6b6456"
+                                    text (T("Piste : ") + T(piste)) italic True size tx(23) color gm_parchemin_sombre
 
                 elif onglet == "journal":
                     vbox:
@@ -599,9 +613,9 @@ screen secrets():
                         xsize 1360
                         for i, page in enumerate(pages_journal):
                             if i in persistent.pages_journal:
-                                text ("{b}Page %d.{/b} « %s »" % (i + 1, page)) size tx(25) color gm_parchemin
+                                text ("{b}" + (T("Page %d.") % (i + 1)) + "{/b} " + (T("« %s »") % T(page))) size tx(25) color gm_parchemin
                             else:
-                                text ("{b}Page %d.{/b} Cette page n'a pas encore été retrouvée." % (i + 1)) italic True size tx(25) color "#6b6456"
+                                text ("{b}" + (T("Page %d.") % (i + 1)) + "{/b} " + T("Cette page n'a pas encore été retrouvée.")) italic True size tx(25) color "#6b6456"
 
                 else:
                     vpgrid:
@@ -617,7 +631,7 @@ screen secrets():
                                     action SetScreenVariable("agrandi", nom_img)
                                     vbox:
                                         add Transform(nom_img, xysize=(319, 160), fit="cover")
-                                        text titre size 20 color gm_encre xalign 0.5
+                                        text T(titre) size 20 color gm_encre xalign 0.5
                             else:
                                 frame:
                                     xysize (325, 200)
@@ -632,7 +646,7 @@ screen secrets():
             background Solid("#000000")
             action SetScreenVariable("agrandi", None)
             add agrandi
-        text "Cliquez pour fermer" size 22 color gm_parchemin_sombre xalign 0.5 yalign 0.98
+        text T("Cliquez pour fermer") size 22 color gm_parchemin_sombre xalign 0.5 yalign 0.98
 
 
 ## ------------------------------------------------------------
@@ -676,14 +690,14 @@ screen navigation():
         align (0.5, 0.95)
         spacing 40
 
-        textbutton "Retour" action Return()
+        textbutton T("Retour") action Return()
         if not main_menu:
-            textbutton "Historique" action ShowMenu("history")
-            textbutton "Sauvegarder" action ShowMenu("save")
-        textbutton "Charger" action ShowMenu("load")
-        textbutton "Réglages" action ShowMenu("preferences")
+            textbutton T("Historique") action ShowMenu("history")
+            textbutton T("Sauvegarder") action ShowMenu("save")
+        textbutton T("Charger") action ShowMenu("load")
+        textbutton T("Réglages") action ShowMenu("preferences")
         if not main_menu:
-            textbutton "Menu principal" action MainMenu(confirm=True)
+            textbutton T("Menu principal") action MainMenu(confirm=True)
 
 
 ## ------------------------------------------------------------
@@ -691,12 +705,12 @@ screen navigation():
 ## ------------------------------------------------------------
 
 screen save():
-    use game_menu(_("Sauvegarder votre partie")):
+    use game_menu(T("Sauvegarder votre partie")):
         use file_slots
 
 
 screen load():
-    use game_menu(_("Charger une partie")):
+    use game_menu(T("Charger une partie")):
         use file_slots
 
 
@@ -728,7 +742,7 @@ screen file_slots():
                         vbox:
                             yalign 0.5
                             text FileSlotName(i) style "gm_titre" color gm_gold size 22
-                            text FileTime(i, format=_("%d/%m/%Y - %H:%M"), empty=_("Emplacement vide")) color gm_parchemin size 20
+                            text FileTime(i, format=T("%d/%m/%Y - %H:%M"), empty=T("Emplacement vide")) color gm_parchemin size 20
 
 
 ## ------------------------------------------------------------
@@ -739,7 +753,7 @@ screen history():
     tag menu
     predict False
 
-    use game_menu(_("Historique")):
+    use game_menu(T("Historique")):
         viewport:
             xysize (1300, 640)
             scrollbars "vertical"
@@ -752,7 +766,7 @@ screen history():
                 xsize 1260
 
                 if not _history_list:
-                    text "Rien à relire pour l'instant." size 26 color gm_parchemin_sombre
+                    text T("Rien à relire pour l'instant.") size 26 color gm_parchemin_sombre
 
                 for h in _history_list:
                     text h.what substitute False size 27 color gm_parchemin xsize 1240
@@ -763,7 +777,7 @@ screen history():
 ## ------------------------------------------------------------
 
 screen preferences():
-    use game_menu(_("Réglages")):
+    use game_menu(T("Réglages")):
         vbox:
             spacing 25
             xsize 700
@@ -771,22 +785,28 @@ screen preferences():
             for titre, reglage in [("Ambiance", "music volume"), ("Effets sonores", "sound volume")]:
                 vbox:
                     spacing 8
-                    text titre style "gm_titre" color gm_gold size 28
+                    text T(titre) style "gm_titre" color gm_gold size 28
                     bar value Preference(reglage) xsize 700 ysize 30 left_bar Solid(gm_gold) right_bar Solid("#1a2236") thumb None
 
             vbox:
                 spacing 8
-                text "Vitesse du texte" style "gm_titre" color gm_gold size 28
+                text T("Vitesse du texte") style "gm_titre" color gm_gold size 28
                 bar value Preference("text speed") xsize 700 ysize 30 left_bar Solid(gm_gold) right_bar Solid("#1a2236") thumb None
 
-            textbutton "Couper tous les sons" action Preference("all mute", "toggle") text_style "gm_titre" text_color gm_gold text_hover_color gm_gold_light text_selected_color gm_gold_light text_size 26
+            textbutton T("Couper tous les sons") action Preference("all mute", "toggle") text_style "gm_titre" text_color gm_gold text_hover_color gm_gold_light text_selected_color gm_gold_light text_size 26
 
-            # Accessibilité
-            text "Accessibilité" style "gm_titre" color gm_gold size 28
+            text T("Langue") style "gm_titre" color gm_gold size 28
             hbox:
                 spacing 40
-                textbutton ("☑ Texte agrandi" if persistent.texte_grand else "☐ Texte agrandi") action ToggleField(persistent, "texte_grand") text_font "DejaVuSans.ttf" text_color gm_parchemin text_hover_color gm_gold_light text_size 26
-                textbutton ("☑ Sans flash ni secousse" if persistent.sans_flash else "☐ Sans flash ni secousse") action ToggleField(persistent, "sans_flash") text_font "DejaVuSans.ttf" text_color gm_parchemin text_hover_color gm_gold_light text_size 26
+                textbutton "Français" action SetField(persistent, "langue", "fr") selected persistent.langue == "fr" text_style "gm_titre" text_color gm_parchemin text_hover_color gm_gold_light text_selected_color gm_gold text_size 26
+                textbutton "English" action SetField(persistent, "langue", "en") selected persistent.langue == "en" text_style "gm_titre" text_color gm_parchemin text_hover_color gm_gold_light text_selected_color gm_gold text_size 26
+
+            # Accessibilité
+            text T("Accessibilité") style "gm_titre" color gm_gold size 28
+            hbox:
+                spacing 40
+                textbutton (("☑ " if persistent.texte_grand else "☐ ") + T("Texte agrandi")) action ToggleField(persistent, "texte_grand") text_font "DejaVuSans.ttf" text_color gm_parchemin text_hover_color gm_gold_light text_size 26
+                textbutton (("☑ " if persistent.sans_flash else "☐ ") + T("Sans flash ni secousse")) action ToggleField(persistent, "sans_flash") text_font "DejaVuSans.ttf" text_color gm_parchemin text_hover_color gm_gold_light text_size 26
 
 
 ## ------------------------------------------------------------
@@ -803,13 +823,13 @@ screen confirm(message, yes_action, no_action):
         vbox:
             spacing 30
 
-            text message color gm_parchemin size 30 xsize 700 text_align 0.5 xalign 0.5
+            text message_confirmation(message) color gm_parchemin size 30 xsize 700 text_align 0.5 xalign 0.5
 
             hbox:
                 xalign 0.5
                 spacing 30
-                use gm_bouton("Oui", yes_action, 200, 70, 28, "btn_start")
-                use gm_bouton("Non", no_action, 200, 70, 28, "btn_quit")
+                use gm_bouton(T("Oui"), yes_action, 200, 70, 28, "btn_start")
+                use gm_bouton(T("Non"), no_action, 200, 70, 28, "btn_quit")
 
 
 ## ------------------------------------------------------------
