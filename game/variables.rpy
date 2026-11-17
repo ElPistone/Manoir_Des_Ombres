@@ -10,13 +10,19 @@
 #   la porte : son pouvoir ne joue pas pour cette énigme ;
 # - avec 2 fragments, on peut tout risquer (double mise) : énigme plus dure,
 #   mais 2 fragments gagnés d'un coup ;
+# - à chaque salle, deux portes : la porte de chêne (énigme à choix) ou la
+#   porte qui murmure (fouille de la salle ou réponse à taper), qui rallume
+#   la bougie et livre une page du journal d'Éléonore si l'on répond juste ;
+# - la BOUGIE remplace le compteur de portes : elle éclaire 12 portes, perd
+#   une porte quand on implore un indice, en regagne une à la porte qui murmure ;
 # - une fois la carte complète (4 fragments), il reste la PORTE DE SORTIE :
-#   une énigme à réponse libre ; une erreur coûte encore un fragment ;
-# - défaite s'il n'a plus de fragment à miser, ou après 12 portes.
+#   deux énigmes à réponse libre ; une erreur coûte encore un fragment ;
+# - défaite s'il n'a plus de fragment à miser, ou si la bougie s'éteint.
 # La difficulté suit le nombre de fragments possédés :
 # 1 -> niveau 0, 2 -> niveau 1, 3 -> niveau 2, 4 -> niveau 3 (sortie).
 define total_pieces = 4           # fragments nécessaires pour reconstituer la carte
-define max_manches = 12           # nombre maximum de portes
+define max_manches = 12           # portes que la bougie peut éclairer au départ
+define etapes_sortie = 2          # la porte de sortie a deux verrous
 define niveau_sortie = 3          # niveau de l'énigme de la porte de sortie
 
 default pieces_owned = []         # fragments possédés, ex: ["piece_01", "piece_03"]
@@ -29,12 +35,26 @@ default mise = []                 # fragment(s) misé(s) à la porte en cours
 default erreurs = 0               # nombre de mauvaises réponses dans la partie
 default cle_utilisee = False      # le pouvoir de la Clé ne sert qu'une fois par partie
 default id_partie = ""            # identifiant de la partie (anti-triche)
+default bonus_bougie = 0          # portes gagnées (porte qui murmure) ou perdues (indice imploré)
+default porte_murmure = False     # le joueur a choisi la porte qui murmure
+default salle_courante = "bg_entrance_hall"  # pièce où se trouve la porte en cours
+default carte_complete_vue = False  # la carte a été complète au moins une fois dans la partie
+default serie_ok = 0              # bonnes réponses d'affilée
+default serie_ko = 0              # erreurs d'affilée
 
 # Mémoire du manoir : le verdict de chaque porte déjà répondue. Recharger une
 # sauvegarde faite devant une énigme ne permet donc pas de changer de réponse.
 default persistent.verdicts = {}
-# Fins découvertes (affichées sur l'écran titre)
+# Fins découvertes (écran titre et écran « Secrets du manoir »)
 default persistent.fins_vues = set()
+# Mémoire entre les parties : le manoir se souvient de ses visiteurs
+default persistent.parties = 0
+default persistent.derniere_fin = None
+# Pages du journal d'Éléonore retrouvées (gardées d'une partie à l'autre)
+default persistent.pages_journal = set()
+# Accessibilité
+default persistent.texte_grand = False
+default persistent.sans_flash = False
 
 init python:
     import re
@@ -178,6 +198,9 @@ init python:
             {"riddle": "Je garde la maison, j'aboie quand on frappe et je remue la queue. Qui suis-je ?",
              "choices": ["Un chien", "Un chat", "Un hibou", "Un cheval"], "answer": "Un chien",
              "indice": "Je suis le meilleur ami de l'homme."},
+            {"riddle": "Dans le grenier, je tisse ma toile dans tous les coins, et j'ai huit pattes. Qui suis-je ?",
+             "choices": ["Une araignée", "Une fourmi", "Un papillon", "Une souris"], "answer": "Une araignée",
+             "indice": "Regardez les toiles accrochées aux poutres.", "salle": "bg_attic"},
         ],
         # --- Niveau 1 : il faut réfléchir ---
         [
@@ -217,6 +240,16 @@ init python:
             {"riddle": "Je cours sans jambes, j'ai un lit mais je ne dors jamais. Qui suis-je ?",
              "choices": ["Une rivière", "Le vent", "Un nuage", "Une horloge"], "answer": "Une rivière",
              "indice": "Je finis dans la mer."},
+            {"riddle": "Plus je vieillis au fond de cette cave, plus on me trouve bon. Qui suis-je ?",
+             "choices": ["Le vin", "Le pain", "Le lait", "La soupe"], "answer": "Le vin",
+             "indice": "On me garde dans un tonneau.", "salle": "bg_cellar"},
+            {"riddle": "On me couvre d'un drap pour me protéger, et pourtant je n'ai jamais froid. Je reçois tout le monde sans jamais me lever. Qui suis-je ?",
+             "choices": ["Un fauteuil", "Un fantôme", "Un lit", "Un chat"], "answer": "Un fauteuil",
+             "indice": "Les meubles du grenier dorment sous des draps.", "salle": "bg_attic"},
+            {"riddle": "Dans ce couloir, le premier tableau est accroché à 1 mètre de la porte, puis il y en a un tous les 2 mètres. À quelle distance de la porte se trouve le cinquième ?",
+             "choices": ["9 m", "10 m", "11 m", "8 m"], "answer": "9 m",
+             "indice": "Entre le premier et le cinquième, il n'y a que quatre intervalles.", "salle": "bg_corridor_01",
+             "accepte": ["9", "9 m", "9 metres", "neuf", "neuf metres"]},
         ],
         # --- Niveau 2 : vraiment difficile, souvent un piège ---
         [
@@ -253,6 +286,10 @@ init python:
             {"riddle": "Dans le miroir fêlé de la chambre, une horloge sans chiffres semble indiquer 3 h pile. Quelle heure est-il vraiment ?",
              "choices": ["9 h", "3 h", "6 h", "12 h"], "answer": "9 h",
              "indice": "Un miroir inverse la gauche et la droite.", "illus": "mirror"},
+            {"riddle": "Un homme monte cet escalier de 12 marches deux par deux, puis le redescend trois par trois. Combien de pas a-t-il faits en tout ?",
+             "choices": ["10", "12", "24", "5"], "answer": "10",
+             "indice": "Comptez la montée, puis la descente, séparément.", "salle": "bg_stairs",
+             "accepte": ["10", "dix"]},
         ],
         # --- Niveau 3 : la porte de sortie, réponse libre au clavier ---
         [
@@ -283,20 +320,135 @@ init python:
         ],
     ]
 
-    def tirer_enigme(niv, deja_vues, sauf=None):
+    # Compléments : salle où l'énigme se pose de préférence, et réponses
+    # admises au clavier (porte qui murmure). Sans "accepte", une réponse
+    # d'un seul mot est acceptée telle quelle (sans article ni accent).
+    complements = {
+        "Un escalier": {"salle": "bg_stairs"},
+        "Une bougie": {"salle": "bg_cellar"},
+        "Onze": {"salle": "bg_entrance_hall", "accepte": ["onze", "11"]},
+        "9 h": {"salle": "bg_corridor_02", "accepte": ["9", "9 h", "neuf", "neuf heures", "9 heures"]},
+        "Sa fille": {"salle": "bg_corridor_01"},
+        "Une pièce de monnaie": {"accepte": ["piece", "piece monnaie", "monnaie"]},
+        "La lettre N": {"accepte": ["n", "lettre n"]},
+        "L'obscurité": {"accepte": ["obscurite", "noir", "nuit", "tenebres"]},
+        "L'avenir": {"accepte": ["avenir", "futur"]},
+        "L'homme": {"accepte": ["homme", "humain", "etre humain"]},
+        "Aucune": {"accepte": ["aucune", "aucun", "zero", "0"]},
+        "Neuf": {"accepte": ["neuf", "9"]},
+        "Une rivière": {"accepte": ["riviere", "fleuve"]},
+        "Votre prénom": {"accepte": ["prenom", "nom"]},
+    }
+
+    # ------------------------------------------------------------------
+    # LES FOUILLES : énigmes visuelles, on clique sur l'objet dans la salle
+    # ------------------------------------------------------------------
+    # "zones" : rectangles (x0, y0, x1, y1) en fractions de l'écran.
+    fouilles = [
+        {"salle": "bg_entrance_hall", "answer": "lustre", "indice": "Levez les yeux.",
+         "riddle": "Je porte des flammes sans jamais brûler, je pends au-dessus de vos têtes et je n'ai jamais touché le sol. Montrez-moi.",
+         "zones": {"lustre": (0.41, 0.08, 0.58, 0.27), "escalier": (0.34, 0.44, 0.66, 0.79),
+                   "porte de gauche": (0.08, 0.16, 0.20, 0.82), "porte de droite": (0.80, 0.16, 0.93, 0.82),
+                   "tapis": (0.34, 0.82, 0.66, 0.99)}},
+        {"salle": "bg_entrance_hall", "answer": "tapis", "indice": "Il couvre les marches et le sol.",
+         "riddle": "Je suis un long chemin rouge que tout le monde piétine, et personne ne s'en excuse. Montrez-moi.",
+         "zones": {"lustre": (0.41, 0.08, 0.58, 0.27), "tapis": (0.34, 0.82, 0.66, 0.99),
+                   "porte de gauche": (0.08, 0.16, 0.20, 0.82), "porte de droite": (0.80, 0.16, 0.93, 0.82)}},
+        {"salle": "bg_attic", "answer": "fauteuil à bascule", "indice": "Il attend dans l'ombre, au fond à droite.",
+         "riddle": "Je me balance sans vent, et pourtant personne ne s'assoit sur moi. Montrez-moi.",
+         "zones": {"fauteuil à bascule": (0.79, 0.52, 0.88, 0.75), "miroir": (0.60, 0.46, 0.70, 0.79),
+                   "lucarne": (0.53, 0.30, 0.61, 0.42), "malles": (0.40, 0.60, 0.60, 0.86),
+                   "canapé couvert": (0.18, 0.57, 0.40, 0.85)}},
+        {"salle": "bg_attic", "answer": "lucarne", "indice": "La lumière bleue entre par là.",
+         "riddle": "Je suis un œil rond dans le mur, et la lune regarde à travers moi. Montrez-moi.",
+         "zones": {"fauteuil à bascule": (0.79, 0.52, 0.88, 0.75), "miroir": (0.60, 0.46, 0.70, 0.79),
+                   "lucarne": (0.53, 0.30, 0.61, 0.42), "malles": (0.40, 0.60, 0.60, 0.86)}},
+        {"salle": "bg_cellar", "answer": "tonneau", "indice": "La bougie est posée sur lui.",
+         "riddle": "J'ai un ventre rond et je garde le vin, mais je n'ai jamais soif. Montrez-moi.",
+         "zones": {"tonneau": (0.22, 0.58, 0.38, 0.88), "bougie": (0.27, 0.42, 0.33, 0.56),
+                   "caisses": (0.77, 0.43, 0.90, 0.67), "flaque": (0.42, 0.76, 0.70, 0.96),
+                   "tunnel": (0.52, 0.27, 0.78, 0.55)}},
+        {"salle": "bg_cellar", "answer": "bougie", "indice": "Je suis la seule lumière de la cave.",
+         "riddle": "Je pleure de la cire et je meurs en vous éclairant. Montrez-moi.",
+         "zones": {"tonneau": (0.22, 0.58, 0.38, 0.88), "bougie": (0.27, 0.42, 0.33, 0.56),
+                   "caisses": (0.77, 0.43, 0.90, 0.67), "tunnel": (0.52, 0.27, 0.78, 0.55)}},
+        {"salle": "bg_stairs", "answer": "lanterne", "indice": "Elle pend à un bras de fer forgé.",
+         "riddle": "Je suis une prison de verre pour une petite flamme. Montrez-moi.",
+         "zones": {"lanterne": (0.30, 0.40, 0.43, 0.54), "marches du haut": (0.53, 0.06, 0.86, 0.34),
+                   "marches du bas": (0.53, 0.60, 0.86, 0.90), "colonne": (0.46, 0.06, 0.53, 0.95)}},
+        {"salle": "bg_stairs", "answer": "colonne", "indice": "Je suis au centre de l'escalier.",
+         "riddle": "Tous les pas tournent autour de moi, et je n'en fais jamais un seul. Montrez-moi.",
+         "zones": {"lanterne": (0.30, 0.40, 0.43, 0.54), "marches du haut": (0.55, 0.06, 0.86, 0.34),
+                   "marches du bas": (0.55, 0.60, 0.86, 0.90), "colonne": (0.46, 0.06, 0.54, 0.95)}},
+        {"salle": "bg_corridor_02", "answer": "miroir", "indice": "Ma surface est fêlée de partout.",
+         "riddle": "Je suis brisé, et pourtant je vous montre encore une autre pièce. Montrez-moi.",
+         "zones": {"miroir": (0.17, 0.10, 0.40, 0.70), "applique": (0.65, 0.37, 0.71, 0.48),
+                   "tapis": (0.45, 0.86, 0.76, 0.99), "voûte": (0.60, 0.01, 0.85, 0.30)}},
+        {"salle": "bg_corridor_02", "answer": "applique", "indice": "Une seule flamme brûle dans ce couloir.",
+         "riddle": "Je suis une petite main de métal qui tient la lumière contre le mur. Montrez-moi.",
+         "zones": {"miroir": (0.17, 0.10, 0.40, 0.70), "applique": (0.65, 0.37, 0.71, 0.48),
+                   "tapis": (0.45, 0.86, 0.76, 0.99), "voûte": (0.60, 0.01, 0.85, 0.30)}},
+        {"salle": "bg_corridor_01", "answer": "tableaux", "indice": "Ils sont accrochés aux murs, dans des cadres dorés.",
+         "riddle": "Nous vous regardons passer depuis des années, mais nous n'avons jamais cligné des yeux. Montrez-nous.",
+         "zones": {"tableaux": (0.73, 0.08, 0.84, 0.57), "applique": (0.20, 0.22, 0.27, 0.40),
+                   "porte du fond": (0.46, 0.41, 0.56, 0.62), "tapis": (0.32, 0.72, 0.68, 0.99)}},
+        {"salle": "bg_corridor_01", "answer": "porte du fond", "indice": "Regardez tout au bout du couloir.",
+         "riddle": "Je suis au bout de tout, et plus vous marchez vers moi, moins je semble approcher. Montrez-moi.",
+         "zones": {"tableaux": (0.73, 0.08, 0.84, 0.57), "applique": (0.20, 0.22, 0.27, 0.40),
+                   "porte du fond": (0.46, 0.41, 0.56, 0.62), "tapis": (0.32, 0.72, 0.68, 0.99)}},
+    ]
+    for _f in fouilles:
+        _f["fouille"] = True
+
+    def reponses_admises(enigme):
+        """Réponses acceptées au clavier, ou [] si l'énigme ne s'y prête pas."""
+        if "accepte" in enigme:
+            return enigme["accepte"]
+        mot = normaliser(enigme.get("answer", ""))
+        return [mot] if mot and " " not in mot else []
+
+    for _niv in enigmes_par_niveau:
+        for _e in _niv:
+            _e.update(complements.get(_e.get("answer"), {}))
+
+    def tirer_enigme(niv, deja_vues, sauf=None, salle=None, saisie=False):
         """Tire une énigme du niveau donné, pas encore posée si possible
-        (et différente de « sauf »), et renvoie (énigme, réponses mélangées)."""
+        (et différente de « sauf »), de préférence liée à la salle, et renvoie
+        (énigme, réponses mélangées). Avec saisie=True, l'énigme se répond
+        au clavier."""
         toutes = enigmes_par_niveau[niv]
-        pool = [e for e in toutes if e["riddle"] not in deja_vues and e is not sauf]
+        if saisie:
+            toutes = [e for e in toutes if reponses_admises(e)] or toutes
+        sauf_txt = sauf["riddle"] if sauf else None
+        pool = [e for e in toutes if e["riddle"] not in deja_vues and e["riddle"] != sauf_txt]
         if not pool:
-            pool = [e for e in toutes if e is not sauf] or toutes
-        enigme = renpy.random.choice(pool)
-        choix = list(enigme.get("choices", []))
+            pool = [e for e in toutes if e["riddle"] != sauf_txt] or toutes
+        de_la_salle = [e for e in pool if salle and e.get("salle") == salle]
+        enigme = renpy.random.choice(de_la_salle or pool)
+        if saisie and not enigme.get("saisie"):
+            enigme = dict(enigme, saisie=True, accepte=reponses_admises(enigme))
+        choix = [] if enigme.get("saisie") else list(enigme.get("choices", []))
         renpy.random.shuffle(choix)
         return enigme, choix
 
+    def tirer_fouille(salle, deja_vues, sauf=None):
+        """Une fouille de la salle pas encore posée, ou None."""
+        pool = [f for f in fouilles if f["salle"] == salle and f["riddle"] not in deja_vues
+                and (sauf is None or f["riddle"] != sauf.get("riddle"))]
+        return renpy.random.choice(pool) if pool else None
+
+    def tirer_murmure(niv, deja_vues, salle, sauf=None):
+        """Énigme de la porte qui murmure : une fouille de la salle si
+        possible, sinon une énigme à réponse libre."""
+        f = tirer_fouille(salle, deja_vues, sauf)
+        if f is not None and renpy.has_image(salle):
+            return f, []
+        return tirer_enigme(niv, deja_vues, sauf=sauf, salle=salle, saisie=True)
+
     def reponse_barree(enigme, choix):
-        """Pouvoir de l'Encre : une mauvaise réponse à barrer."""
+        """Pouvoir de l'Encre : une mauvaise réponse (ou zone) à barrer."""
+        if enigme.get("fouille"):
+            choix = list(enigme["zones"].keys())
         fausses = [c for c in choix if c != enigme["answer"]]
         return renpy.random.choice(fausses) if fausses else None
 
@@ -314,12 +466,12 @@ init python:
 
     def bonne_reponse(enigme, reponse):
         if enigme.get("saisie"):
-            return normaliser(reponse or "") in [normaliser(a) for a in enigme["accepte"]]
+            return normaliser(reponse or "") in [normaliser(a) for a in reponses_admises(enigme)]
         return reponse == enigme["answer"]
 
     def premiere_lettre(enigme):
         """Pouvoir de l'Encre sur une énigme à réponse libre."""
-        mot = normaliser(enigme["accepte"][0])
+        mot = normaliser(reponses_admises(enigme)[0])
         return mot[:1].upper()
 
     # ------------------------------------------------------------------
@@ -332,9 +484,9 @@ init python:
         """Verdict déjà rendu pour cette porte (partie rechargée), ou None."""
         return persistent.verdicts.get(cle_porte())
 
-    def memoriser_verdict(correct, misees):
+    def memoriser_verdict(correct, misees, murmure=False):
         verdicts = dict(persistent.verdicts)
-        verdicts[cle_porte()] = (correct, list(misees))
+        verdicts[cle_porte()] = (correct, list(misees), murmure)
         # On ne garde que les 300 derniers verdicts
         while len(verdicts) > 300:
             del verdicts[next(iter(verdicts))]
@@ -342,15 +494,70 @@ init python:
         renpy.save_persistent()
 
     # ------------------------------------------------------------------
+    # LA BOUGIE (remplace le compteur de portes)
+    # ------------------------------------------------------------------
+    def portes_restantes():
+        """Portes que la bougie peut encore éclairer (porte en cours comprise
+        tant qu'on ne l'a pas franchie)."""
+        return max(0, min(max_manches, max_manches + bonus_bougie) - manche)
+
+    # ------------------------------------------------------------------
     # FINS
     # ------------------------------------------------------------------
+    # (code, nom, comment l'obtenir : affiché tant que la fin est cachée)
     fins = [
-        ("delivrance", "La délivrance"),
-        ("aube", "L'aube"),
-        ("mains_vides", "Les mains vides"),
-        ("minuit", "Le dernier coup de minuit"),
+        ("delivrance", "La délivrance", "Sortir sans commettre une seule erreur."),
+        ("aube", "L'aube", "Trouver la sortie."),
+        ("vrai_nom", "Le vrai nom", "Un secret dort dans le journal d'Éléonore."),
+        ("mains_vides", "Les mains vides", "Perdre tous ses fragments."),
+        ("gardien", "Le gardien", "Tout perdre après avoir tenu la carte complète."),
+        ("minuit", "Le dernier coup de minuit", "Laisser la bougie s'éteindre."),
     ]
 
     def debloquer_fin(code):
         persistent.fins_vues = set(persistent.fins_vues) | {code}
+        persistent.derniere_fin = code
         renpy.save_persistent()
+
+    # ------------------------------------------------------------------
+    # LE JOURNAL D'ÉLÉONORE (pages gardées d'une partie à l'autre)
+    # ------------------------------------------------------------------
+    pages_journal = [
+        "Premier jour de ce cahier. Père dit que le monde du dehors est rempli de loups. Je n'en ai jamais vu un seul.",
+        "Les portes du nord sont murées. J'ai compté les pierres : il y en a quarante. Demain, je recompterai.",
+        "La gouvernante est partie cette nuit. Père dit qu'elle s'est perdue dans les couloirs. Les couloirs ne perdent personne. Ils gardent.",
+        "J'ai trouvé le plan dans le bureau de Père. Il l'a lu dans mes yeux. Le lendemain, le plan était déchiré en quatre.",
+        "Le manoir m'écoute. Quand je pose une question aux portes, elles répondent. Quand je me trompe, elles prennent quelque chose.",
+        "Père est mort cet hiver. Les portes ne se sont pas ouvertes pour autant. Je crois que c'est moi, maintenant, qu'elles écoutent.",
+        "Je ne me souviens plus de la couleur du ciel. Je parle aux voyageurs à travers le bois. Aucun ne m'a jamais demandé mon nom.",
+        "Si un jour quelqu'un, devant la dernière porte, au lieu de répondre, prononce mon nom… alors peut-être que je pourrai partir, moi aussi.",
+    ]
+
+    def journal_complet():
+        return len(persistent.pages_journal) >= len(pages_journal)
+
+    def trouver_page():
+        """Ajoute au journal une page encore manquante. Renvoie son numéro
+        (à partir de 1), ou None si le journal est complet."""
+        manquantes = [i for i in range(len(pages_journal)) if i not in persistent.pages_journal]
+        if not manquantes:
+            return None
+        i = min(manquantes)
+        persistent.pages_journal = set(persistent.pages_journal) | {i}
+        renpy.save_persistent()
+        return i + 1
+
+    def dit_le_nom(reponse):
+        """Le joueur tape le nom de la voix à la porte de sortie."""
+        return normaliser(reponse or "") in ("eleonore", "eleonore blackwood")
+
+    # ------------------------------------------------------------------
+    # ACCESSIBILITÉ
+    # ------------------------------------------------------------------
+    def tx(taille):
+        """Taille de texte, agrandie si l'option « Texte agrandi » est active."""
+        return int(taille * 1.18) if persistent.texte_grand else taille
+
+    def flash(transition):
+        """Transition éclair, remplacée par un simple fondu en mode sans flash."""
+        return Dissolve(0.4) if persistent.sans_flash else transition

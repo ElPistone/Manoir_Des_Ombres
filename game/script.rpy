@@ -17,13 +17,39 @@ default sortie = False
 default actifs = []
 default barree = None
 default sablier_utilise = False
+default indice_achete = False
 default correct = False
+default etape = 1
+
+
+init python:
+
+    def nouvelle_enigme(sauf=None):
+        """Tire l'énigme de la porte en cours selon son type (sortie, porte
+        qui murmure ou porte de chêne) et prépare le pouvoir de l'Encre."""
+        if sortie:
+            e, c = tirer_enigme(niveau_sortie, enigmes_vues, sauf=sauf)
+        elif porte_murmure:
+            e, c = tirer_murmure(niveau, enigmes_vues, salle_courante, sauf=sauf)
+        else:
+            e, c = tirer_enigme(niveau, enigmes_vues, sauf=sauf, salle=salle_courante)
+        store.enigme_courante = e
+        store.choix_melanges = c
+        store.enigmes_vues.append(e["riddle"])
+        store.barree = reponse_barree(e, c) if ("Encre" in actifs and not e.get("saisie")) else None
+
+    def indice_visible():
+        return "Lanterne" in actifs or indice_achete
+
+    def implorer_possible():
+        return not indice_visible() and portes_restantes() >= 1
 
 
 # --- Introduction ---
 label start:
 
     $ _game_menu_screen = "save"
+    $ persistent.parties += 1
     play music "audio/ambiance_orage.ogg" fadein 2.0 volume 0.9
     scene bg_exterior_forest with fondu_lent
     narrateur "La pluie a effacé le chemin depuis longtemps. Vous êtes perdu, seul, dans la forêt."
@@ -52,6 +78,11 @@ label start:
     $ erreurs = 0
     $ cle_utilisee = False
     $ derniere_salle = None
+    $ salle_courante = "bg_entrance_hall"
+    $ bonus_bougie = 0
+    $ carte_complete_vue = False
+    $ serie_ok = 0
+    $ serie_ko = 0
     $ id_partie = "%08x" % renpy.random.getrandbits(32)
 
     $ lore_depart = fragments["piece_01"]["lore"]
@@ -59,34 +90,71 @@ label start:
 
     show screen hud_jeu
 
-    narrateur "Une voix de femme s'élève des murs : « Il te faut [total_pieces] morceaux pour retrouver ton chemin. À chaque porte, tu m'en offriras un. »"
+    # Le manoir se souvient de ceux qui sont déjà venus
+    if persistent.parties > 1:
+        if persistent.derniere_fin in ("delivrance", "aube", "vrai_nom"):
+            narrateur "Une voix de femme s'élève des murs, incrédule : « Toi ? Tu étais sorti… Pourquoi reviens-tu ? »"
+        elif persistent.derniere_fin is not None:
+            narrateur "Une voix de femme s'élève des murs : « Encore toi. La dernière fois, tu es resté avec moi. Tu t'en souviens ? »"
+        else:
+            narrateur "Une voix de femme s'élève des murs : « Je reconnais ton pas. Tu es déjà venu ici. »"
+        $ texte_visite = "« C'est ta %de visite. Les murs se souviennent de toi, et moi aussi. »" % persistent.parties
+        narrateur "[texte_visite]"
+        narrateur "« Les règles n'ont pas changé. Il te faut [total_pieces] morceaux pour retrouver ton chemin. »"
+    else:
+        narrateur "Une voix de femme s'élève des murs : « Il te faut [total_pieces] morceaux pour retrouver ton chemin. À chaque porte, tu m'en offriras un. »"
     narrateur "« Réponds juste, et je te le rends, avec un autre. Trompe-toi, et je le garde. »"
     narrateur "« Chaque morceau a son pouvoir. Celui-ci est la Lanterne : tant que tu le gardes, je te soufflerai un indice. »"
     narrateur "« Mais le morceau que tu mises reste sous la porte… et son pouvoir avec lui. »"
-    narrateur "« Quand ta carte sera complète, il te restera la porte de sortie. [max_manches] portes, pas une de plus. Et si tes mains sont vides avant… tu resteras ici. Avec moi. »"
+    narrateur "« Dans chaque pièce, deux portes. Celle de chêne te proposera des réponses. Celle qui murmure t'obligera à chercher seul… mais elle sait se montrer généreuse. »"
+    narrateur "« Ta bougie éclairera [max_manches] portes. Quand ta carte sera complète, il te restera la porte de sortie. Et si ta bougie s'éteint, ou si tes mains sont vides avant… tu resteras ici. Avec moi. »"
 
     jump door_loop
+
+
+# --- Une page du journal d'Éléonore (gardée d'une partie à l'autre) ---
+label trouver_une_page(intro=""):
+    $ num_page = trouver_page()
+    if num_page is None:
+        return
+    play sound "audio/parchemin.ogg"
+    $ texte_page = "%s Une page du journal d'Éléonore (%d/%d)." % (intro, num_page, len(pages_journal))
+    narrateur "[texte_page]"
+    $ texte_page = "« %s »" % pages_journal[num_page - 1]
+    narrateur "[texte_page]"
+    if journal_complet():
+        narrateur "Le journal est complet. Une phrase, sur la dernière page, semble écrite pour vous."
+    return
 
 
 # --- Boucle principale : une itération par porte (manche) ---
 label door_loop:
 
-    # Défaite : plus rien à miser, ou toutes les portes passées
-    if not pieces_owned or manche >= max_manches:
+    # Défaite : plus rien à miser, ou la bougie s'est éteinte
+    if not pieces_owned or portes_restantes() <= 0:
         jump defeat
 
     $ manche += 1
     $ sortie = len(pieces_owned) >= total_pieces
+    if sortie:
+        $ carte_complete_vue = True
     # La difficulté suit le nombre de fragments ; la carte complète mène à la sortie
     $ niveau = niveau_sortie if sortie else min(len(pieces_owned) - 1, 2)
     $ porte = portes[niveau]
     $ sablier_utilise = False
+    $ indice_achete = False
+    $ porte_murmure = False
+    $ etape = 1
 
     # Entre deux portes, on traverse une pièce du manoir
     if manche > 1:
         $ derniere_salle, texte_salle = tirer_salle(derniere_salle)
+        $ salle_courante = derniere_salle
         scene expression derniere_salle with fondu_noir
         narrateur "[texte_salle]"
+        # Parfois, une page du journal traîne dans la pièce
+        if renpy.random.random() < 0.25:
+            call trouver_une_page("Entre deux lattes du plancher, une feuille arrachée dépasse.")
 
     # Près du but (dernière porte ou sortie), la musique se tend
     if niveau >= 2:
@@ -94,19 +162,29 @@ label door_loop:
     else:
         $ renpy.music.play("audio/ambiance_manoir.ogg", fadeout=2.0, fadein=2.0, if_changed=True, relative_volume=0.55)
 
-    scene expression fond_porte(porte) with fondu_noir
-    $ intro_porte = texte_aleatoire(porte["intros"])
-    narrateur "[intro_porte]"
-
     # Partie rechargée après avoir répondu à cette porte : le verdict est déjà rendu
     $ verdict = verdict_connu()
     if verdict is not None:
-        $ correct, mise = verdict
+        $ correct, mise = verdict[0], verdict[1]
+        $ porte_murmure = verdict[2] if len(verdict) > 2 else False
+        scene expression fond_porte(porte) with fondu_noir
         narrateur "« Tu as déjà répondu à cette porte », chuchote la voix. « Le manoir n'oublie rien. »"
         jump resolution
 
-    # Pas de sauvegarde pendant la mise et l'énigme
+    # Pas de sauvegarde pendant le choix de la porte, la mise et l'énigme
     $ _game_menu_screen = None
+
+    # Deux portes dans chaque pièce (sauf pour la sortie)
+    if not sortie:
+        call screen choix_porte(salle_courante, portes_restantes())
+        $ porte_murmure = _return
+
+    scene expression fond_porte(porte) with fondu_noir
+    if porte_murmure:
+        $ intro_porte = texte_aleatoire(voix_murmure)
+    else:
+        $ intro_porte = texte_aleatoire(porte["intros"])
+    narrateur "[intro_porte]"
 
     # Le joueur choisit le ou les fragments qu'il mise derrière cette porte
     $ double_possible = (not sortie) and len(pieces_owned) >= 2 and len(pieces_owned) + 2 <= total_pieces
@@ -116,9 +194,6 @@ label door_loop:
     if len(mise) == 2:
         $ niveau = min(niveau + 1, 2)
         narrateur "La voix éclate d'un rire bref : « Deux d'un coup ? Alors l'énigme sera à la hauteur de ton audace. »"
-
-    $ enigme_courante, choix_melanges = tirer_enigme(niveau, enigmes_vues)
-    $ enigmes_vues.append(enigme_courante["riddle"])
 
     # Le fragment choisi glisse sous la porte
     play sound "audio/parchemin.ogg"
@@ -130,22 +205,41 @@ label door_loop:
     hide fragment_mise
     hide fragment_mise_2
 
-    # Pouvoirs des fragments restés en main
+    # La voix commente le pouvoir qu'on lui abandonne (une fois sur deux)
+    if len(mise) == 1 and renpy.random.random() < 0.5:
+        $ texte_voix = texte_aleatoire(voix_mise[fragments[mise[0]]["pouvoir"]])
+        narrateur "[texte_voix]"
+
+    # Pouvoirs des fragments restés en main, puis l'énigme
     $ actifs = pouvoirs_actifs(pieces_owned, mise)
-    $ barree = reponse_barree(enigme_courante, choix_melanges) if ("Encre" in actifs and not enigme_courante.get("saisie")) else None
+    $ nouvelle_enigme()
+
+    if sortie:
+        narrateur "La porte de sortie porte deux verrous. Chacun attend sa réponse."
 
 label poser_enigme:
 
-    call screen menu_enigme(enigme_courante, choix_melanges, actifs, barree, ("Sablier" in actifs and not sablier_utilise))
+    if enigme_courante.get("fouille"):
+        # Fouille : on cherche l'objet dans la pièce elle-même
+        scene expression salle_courante with dissolve
+        call screen fouille_salle(enigme_courante, barree, indice_visible(), ("Sablier" in actifs and not sablier_utilise), implorer_possible())
+    else:
+        call screen menu_enigme(enigme_courante, choix_melanges, actifs, barree, ("Sablier" in actifs and not sablier_utilise), indice_visible(), implorer_possible())
 
-    # Pouvoir du Sablier : une autre énigme du même niveau
+    # Pouvoir du Sablier : une autre énigme du même type
     if _return == "__sablier__":
         $ sablier_utilise = True
         play sound "audio/parchemin.ogg"
-        $ enigme_courante, choix_melanges = tirer_enigme(niveau, enigmes_vues, sauf=enigme_courante)
-        $ enigmes_vues.append(enigme_courante["riddle"])
-        $ barree = reponse_barree(enigme_courante, choix_melanges) if ("Encre" in actifs and not enigme_courante.get("saisie")) else None
+        $ nouvelle_enigme(sauf=enigme_courante)
         narrateur "Vous retournez le sablier. Le sable remonte, et l'énigme se réécrit sous vos yeux."
+        jump poser_enigme
+
+    # Indice imploré : la bougie raccourcit d'une porte
+    if _return == "__implorer__":
+        $ indice_achete = True
+        $ bonus_bougie -= 1
+        play sound "audio/bougie_souffle.ogg"
+        narrateur "Vous implorez la voix. La flamme de votre bougie se tord et rapetisse. « Écoute bien, car je ne le dirai qu'une fois… »"
         jump poser_enigme
 
     # Réponse libre vide (Entrée par mégarde) : on repose la question
@@ -153,7 +247,13 @@ label poser_enigme:
         jump poser_enigme
 
     $ choix_joueur = _return
-    $ _game_menu_screen = "save"
+
+    # Le nom de la voix, prononcé devant la porte de sortie
+    if sortie and dit_le_nom(choix_joueur):
+        if journal_complet():
+            jump fin_vrai_nom
+        narrateur "Les runes se figent. « Qui t'a dit mon nom ? » Un long silence. « Tu ne connais pas encore toute mon histoire. Réponds à l'énigme. »"
+        jump poser_enigme
 
     # La réponse est définitive : aucun retour en arrière possible
     $ renpy.block_rollback()
@@ -161,10 +261,21 @@ label poser_enigme:
     # Le manoir garde la trace de chaque verdict (contre les rechargements)
     $ verdict = verdict_connu()
     if verdict is not None:
-        $ correct, mise = verdict
+        $ correct, mise = verdict[0], verdict[1]
     else:
         $ correct = bonne_reponse(enigme_courante, choix_joueur)
-        $ memoriser_verdict(correct, mise)
+
+        # Porte de sortie : il faut ouvrir les deux verrous
+        if correct and sortie and etape < etapes_sortie:
+            $ etape += 1
+            play sound "audio/bonne_reponse.ogg"
+            narrateur "Le premier verrou cède avec un claquement sec. « Un autre », souffle la voix. « Le dernier. »"
+            $ sablier_utilise = False
+            $ indice_achete = False
+            $ nouvelle_enigme()
+            jump poser_enigme
+
+        $ memoriser_verdict(correct, mise, porte_murmure)
 
 label resolution:
 
@@ -172,6 +283,8 @@ label resolution:
     $ actifs = pouvoirs_actifs(pieces_owned, mise)
 
     if correct:
+        $ serie_ok += 1
+        $ serie_ko = 0
         if sortie:
             jump victory
 
@@ -184,7 +297,9 @@ label resolution:
                     gagnes.append(_p)
 
         play sound "audio/bonne_reponse.ogg"
-        with eclat_or
+        with flash(eclat_or)
+        # La porte s'ouvre : on avance dans l'embrasure
+        scene expression fond_porte(porte) at porte_s_ouvre
         $ texte_victoire = texte_aleatoire(messages_victoire_porte)
         narrateur "[texte_victoire]"
 
@@ -199,12 +314,24 @@ label resolution:
             narrateur "Au dos, quelques lignes d'une écriture fine : [texte_lore]"
             $ i_gain += 1
 
+        # Récompense de la porte qui murmure
+        if porte_murmure:
+            $ bonus_bougie += 1
+            narrateur "La flamme de votre bougie se redresse et grandit : la porte qui murmure vous offre une porte de plus."
+            call trouver_une_page("Glissée dans l'entrebâillement de la porte, une feuille vous attend.")
+
+        if serie_ok >= 3 and serie_ok % 3 == 0:
+            $ texte_voix = texte_aleatoire(voix_serie_ok)
+            narrateur "[texte_voix]"
+
         play sound "audio/porte_grince.ogg"
 
     else:
         $ erreurs += 1
+        $ serie_ko += 1
+        $ serie_ok = 0
         play sound "audio/mauvaise_reponse.ogg"
-        with eclat_rouge
+        with flash(eclat_rouge)
 
         if "Clé" in actifs and not cle_utilisee:
             # Pouvoir de la Clé : une erreur pardonnée par partie
@@ -215,16 +342,21 @@ label resolution:
                 for _p in mise:
                     if _p in pieces_owned:
                         pieces_owned.remove(_p)
-            with hpunch
+            if not persistent.sans_flash:
+                with hpunch
             $ texte_defaite = texte_aleatoire(messages_defaite_porte)
             narrateur "[texte_defaite]"
             if sortie:
                 narrateur "« Presque », souffle la voix. « Ta carte est de nouveau incomplète. »"
 
+        if serie_ko >= 2 and pieces_owned:
+            $ texte_voix = texte_aleatoire(voix_serie_ko)
+            narrateur "[texte_voix]"
+
     # Petit bilan avant la porte suivante
-    if pieces_owned and manche < max_manches:
-        $ restantes = max_manches - manche
-        $ texte_restantes = "Il ne reste qu'une porte." if restantes == 1 else "Il reste %d portes." % restantes
+    if pieces_owned and portes_restantes() > 0:
+        $ restantes = portes_restantes()
+        $ texte_restantes = "Votre bougie n'éclairera plus qu'une porte." if restantes == 1 else "Votre bougie peut encore éclairer %d portes." % restantes
         if len(pieces_owned) >= total_pieces:
             $ bilan = "La carte est complète ! Il ne reste qu'à trouver la porte de sortie. %s" % texte_restantes
         else:
@@ -257,8 +389,27 @@ label victory:
         narrateur "Au loin, une voix appelle encore, très bas : « Emmène-moi… » Mais la porte s'est déjà refermée. Fin : « L'aube »."
         narrateur "(Peut-être existe-t-il une autre fin, pour qui ne se tromperait jamais…)"
 
-    $ texte_score = "Sortie trouvée en %d portes sur %d, avec %d erreur%s." % (manche, max_manches, erreurs, "s" if erreurs > 1 else "")
+    $ texte_score = "Sortie trouvée en %d portes, avec %d erreur%s." % (manche, erreurs, "s" if erreurs > 1 else "")
     narrateur "[texte_score]"
+    return
+
+
+# Fin secrète : dire le nom de la voix à la porte de sortie, journal complet
+label fin_vrai_nom:
+    $ _game_menu_screen = "save"
+    $ renpy.block_rollback()
+    hide screen hud_jeu
+    stop music fadeout 3.0
+    $ debloquer_fin("vrai_nom")
+    play sound "audio/bougie_souffle.ogg"
+    scene bg_secret_room with fin_partie
+    narrateur "« Éléonore. » Le nom tombe dans le silence comme une pierre au fond d'un puits."
+    narrateur "Les runes de la porte s'éteignent. Puis, une à une, toutes les bougies du manoir."
+    narrateur "« Personne… personne ne l'avait jamais dit », souffle la voix. Pour la première fois, elle ne vient pas des murs, mais de juste à côté de vous."
+    play sound "audio/victoire.ogg"
+    scene bg_victory with fin_partie
+    narrateur "Quand vous franchissez la grille, le manoir derrière vous n'est plus qu'un tas de pierres mangées par le lierre, comme s'il était en ruine depuis cent ans."
+    narrateur "Près de vous, quelqu'un regarde le ciel pâlir. Elle avait oublié sa couleur. Fin secrète : « Le vrai nom »."
     return
 
 
@@ -268,14 +419,21 @@ label defeat:
     stop music fadeout 1.5
     play sound "audio/defaite.ogg"
     scene bg_gameover with fin_partie
-    if not pieces_owned:
+    if not pieces_owned and carte_complete_vue:
+        $ debloquer_fin("gardien")
+        narrateur "Vos mains sont vides. Il y a quelques portes encore, vous teniez pourtant la carte entière."
+        narrateur "« Tu étais si près », murmure la voix. « Moi aussi, autrefois. »"
+        narrateur "Une main froide se pose sur la vôtre, puis s'en va. Des pas légers s'éloignent vers l'entrée, et la grande porte s'ouvre… pour quelqu'un d'autre."
+        narrateur "Désormais, c'est votre voix qui résonne dans les murs. Vous attendez le prochain voyageur."
+        $ nom_fin = "Le gardien"
+    elif not pieces_owned:
         $ debloquer_fin("mains_vides")
         narrateur "Vos mains sont vides. Il ne vous reste plus rien à offrir au manoir."
         narrateur "« Ne t'inquiète pas », dit la voix, presque tendre. « On s'habitue. Moi, je me suis habituée. »"
         $ nom_fin = "Les mains vides"
     else:
         $ debloquer_fin("minuit")
-        narrateur "Quelque part, une horloge sonne le dernier coup de minuit. « [max_manches] portes, pas une de plus », rappelle la voix. Votre carte ne vous mènera nulle part."
+        narrateur "Votre bougie n'est plus qu'une flaque de cire. Quelque part, une horloge sonne le dernier coup de minuit, et votre carte ne vous mènera nulle part."
         $ nom_fin = "Le dernier coup de minuit"
     narrateur "Autour de vous, les couloirs se referment un à un, non pas dans un vacarme de pierre, mais dans un silence total, presque poli."
     play sound "audio/bougie_souffle.ogg"
